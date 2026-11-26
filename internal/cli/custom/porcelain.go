@@ -40,6 +40,9 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/operations"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
+
+	// plus: 本家の import 行の並びを変えないよう別の塊に置く。
+	"github.com/google-gemini/gemini-api-cli/internal/plus/modelmap"
 )
 
 // Curated model defaults for the porcelain commands. They mirror the Build
@@ -197,7 +200,7 @@ func modelFlag(cmd *cobra.Command, def, route string) {
 func resolveModel(cmd *cobra.Command, def string) (string, error) {
 	model, _ := flagutil.GetStringFlag(cmd, "model")
 	if strings.TrimSpace(model) == "" {
-		model = def
+		model = modelmap.ResolveDefault(cmd, def) // plus: 既定が Agent Platform に無ければ代わりのモデルにする
 	}
 	id, err := normalizeModelPositional(model)
 	if err != nil {
