@@ -22,7 +22,7 @@ import (
 
 // plusDocsFiles は検査対象の文書（repo ルートからの相対パス）。
 var plusDocsFiles = []string{
-	"skills/gemini-api-plus/SKILL.md",
+	"skills/gemini-api-cli-plus/SKILL.md",
 	".github/README.md",
 	".github/README.ja.md",
 }
@@ -55,7 +55,7 @@ func TestPlusDocsバッシュブロックのコマンドは実在するコマン
 		examples = append(examples, collectPlusDocExamples(t, path, rel)...)
 	}
 	// skill と英語版 README は必ず例を持つ。空なら抽出が壊れている。
-	for _, rel := range []string{"skills/gemini-api-plus/SKILL.md", ".github/README.md"} {
+	for _, rel := range []string{"skills/gemini-api-cli-plus/SKILL.md", ".github/README.md"} {
 		n := 0
 		for _, ex := range examples {
 			if ex.file == rel {
@@ -107,10 +107,10 @@ func TestPlusDocsSkillのnameはディレクトリ名と一致する(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	body := readFileOrFatal(t, filepath.Join(root, "skills", "gemini-api-plus", "SKILL.md"))
+	body := readFileOrFatal(t, filepath.Join(root, "skills", "gemini-api-cli-plus", "SKILL.md"))
 	m := regexp.MustCompile(`(?m)^name:\s*(\S+)\s*$`).FindStringSubmatch(body)
-	if m == nil || m[1] != "gemini-api-plus" {
-		t.Errorf("SKILL.md の frontmatter の name が gemini-api-plus ではない: %v", m)
+	if m == nil || m[1] != "gemini-api-cli-plus" {
+		t.Errorf("SKILL.md の frontmatter の name が gemini-api-cli-plus ではない: %v", m)
 	}
 }
 

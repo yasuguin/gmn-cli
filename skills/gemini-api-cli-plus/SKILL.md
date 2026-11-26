@@ -1,5 +1,5 @@
 ---
-name: gemini-api-plus
+name: gemini-api-cli-plus
 description: Use the gemini-api-plus CLI to call Gemini API or Agent Platform (formerly Vertex AI) from the shell, for generation, analysis, transcription, image, TTS, and managed agents.
 ---
 
