@@ -8,27 +8,19 @@ package vertexmodels
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google-gemini/gemini-api-cli/internal/client"
-	"github.com/google-gemini/gemini-api-cli/internal/config"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
 	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
-	"github.com/google-gemini/gemini-api-cli/internal/sdk"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/vertexhttp"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/genai"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/operations"
-	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/sdkerrors"
-	"github.com/google-gemini/gemini-api-cli/internal/sdk/sdkinternal/hooks"
-	"github.com/google-gemini/gemini-api-cli/internal/testclient"
 	"github.com/spf13/cobra"
 )
 
@@ -64,11 +56,11 @@ func RunList(cmd *cobra.Command) error {
 		return err
 	}
 	token, _ := flagutil.GetStringFlag(cmd, "page-token")
-	s, err := newSession(cmd)
+	s, err := vertexhttp.New(cmd)
 	if err != nil {
 		return err
 	}
-	res, err := s.listResponse(cmd.Context(), pageSize, token)
+	res, err := listResponse(cmd.Context(), s, pageSize, token)
 	if err != nil {
 		return output.Error(cmd, err)
 	}
@@ -95,12 +87,12 @@ func RunList(cmd *cobra.Command) error {
 func RunGet(cmd *cobra.Command) error {
 	model, _ := flagutil.GetStringFlag(cmd, "model")
 	id := strings.TrimPrefix(strings.TrimSpace(model), "models/")
-	s, err := newSession(cmd)
+	s, err := vertexhttp.New(cmd)
 	if err != nil {
 		return err
 	}
 	var body publisherModel
-	if err := s.getJSON(cmd.Context(), publisherModelsPath+"/"+url.PathEscape(id), nil, &body); err != nil {
+	if err := s.GetJSON(cmd.Context(), publisherModelsPath+"/"+url.PathEscape(id), nil, &body); err != nil {
 		return output.Error(cmd, err)
 	}
 	return output.Result(cmd, &operations.ModelsGetResponse{
@@ -110,14 +102,14 @@ func RunGet(cmd *cobra.Command) error {
 
 // listResponse は 1 ページ分を Gemini API の形の envelope にする。
 // Next は SDK と同じく次のページを返す closure で、--all のページ送り（output.PaginatedResult）が呼ぶ。
-func (s *session) listResponse(ctx context.Context, pageSize int64, token string) (*operations.ModelsListResponse, error) {
+func listResponse(ctx context.Context, s *vertexhttp.Session, pageSize int64, token string) (*operations.ModelsListResponse, error) {
 	q := url.Values{}
 	q.Set("pageSize", strconv.FormatInt(pageSize, 10))
 	if token != "" {
 		q.Set("pageToken", token)
 	}
 	var body publisherModelList
-	if err := s.getJSON(ctx, publisherModelsPath, q, &body); err != nil {
+	if err := s.GetJSON(ctx, publisherModelsPath, q, &body); err != nil {
 		return nil, err
 	}
 	models := make([]genai.Model, 0, len(body.PublisherModels))
@@ -135,7 +127,7 @@ func (s *session) listResponse(ctx context.Context, pageSize int64, token string
 		next := body.NextPageToken
 		env.ListModelsResponse.NextPageToken = strPtr(next)
 		env.Next = func() (*operations.ModelsListResponse, error) {
-			return s.listResponse(ctx, pageSize, next)
+			return listResponse(ctx, s, pageSize, next)
 		}
 	}
 	return env, nil
@@ -152,124 +144,6 @@ func pageSizeFlag(cmd *cobra.Command) (int64, error) {
 		return 0, flagutil.WithCLIValidation(fmt.Errorf("--page-size must be between 1 and %d on Agent Platform (got %d)", maxPageSize, v))
 	}
 	return v, nil
-}
-
-// session は Agent Platform への 1 回分の接続。本家の rawhttp と同じく、認証・User-Agent・
-// x-goog-user-project・--header・--timeout・--dry-run の診断ラッパーを揃える。
-type session struct {
-	baseURL     string
-	accessToken string
-	userProject string
-	headers     http.Header
-	timeout     time.Duration
-	client      client.HTTPClient
-	dryRun      bool
-}
-
-func newSession(cmd *cobra.Command) (*session, error) {
-	s := &session{headers: http.Header{}, dryRun: client.IsDryRun(cmd)}
-
-	// 接続先は --server-url のスキームとホストだけを使う。Apply は本家向けの
-	// "{host}/v1beta1/projects/.../locations" を入れるので、パスは捨てて基盤モデル用に付け直す。
-	serverURL, _ := flagutil.GetStringFlag(cmd, "server-url")
-	u, err := url.Parse(serverURL)
-	if err != nil || !u.IsAbs() || u.Host == "" {
-		return nil, flagutil.WithCLIValidation(fmt.Errorf("invalid server URL %q for Agent Platform models", serverURL))
-	}
-	s.baseURL = u.Scheme + "://" + u.Host
-
-	// Agent Platform は OAuth のアクセストークンだけを受け付ける。明示のトークンがあればそれを付け、
-	// 無ければ下の backend.WrapHTTPClient が ADC のトークンをリクエストごとに付ける。
-	s.accessToken, _ = config.ResolveRequestSecurityCredential(cmd, "access-token")
-	s.userProject = resolveGlobalString(cmd, "user-project")
-
-	if hdrs, _ := flagutil.GetStringArrayFlag(cmd, "header"); len(hdrs) > 0 {
-		parsed, err := flagutil.ParseHeaderFlags(hdrs)
-		if err != nil {
-			return nil, err
-		}
-		s.headers = parsed
-	}
-
-	timeoutStr, changed := flagutil.GetStringFlag(cmd, "timeout")
-	if !changed || timeoutStr == "" {
-		timeoutStr = config.GetString("timeout")
-	}
-	if timeoutStr != "" {
-		d, err := time.ParseDuration(timeoutStr)
-		if err != nil || d <= 0 {
-			return nil, flagutil.WithCLIValidation(fmt.Errorf("invalid --timeout value %q: must be a positive Go duration", timeoutStr))
-		}
-		s.timeout = d
-	}
-
-	// 本家の rawhttp と同じく、リダイレクトは辿らない（認証ヘッダを別ホストへ渡さない）。
-	var httpClient client.HTTPClient = &http.Client{
-		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}
-	if tc := testclient.NewTestHTTPClient(); tc != nil {
-		httpClient = tc
-	}
-	// SDK・rawhttp の経路と同じく、診断ラッパーの外側で ADC のトークンを付ける。
-	s.client = backend.WrapHTTPClient(cmd, client.WrapClientForDiagnostics(cmd, httpClient))
-	return s, nil
-}
-
-// getJSON は GET して JSON を out に読む。--dry-run では送らずに示すだけなので読まない。
-func (s *session) getJSON(ctx context.Context, p string, query url.Values, out any) error {
-	full := s.baseURL + p
-	if len(query) > 0 {
-		full += "?" + query.Encode()
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, full, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", hooks.UserAgent(sdk.New().SDKVersion))
-	if s.accessToken != "" {
-		req.Header.Set("Authorization", "Bearer "+s.accessToken)
-	}
-	if s.userProject != "" {
-		req.Header.Set("x-goog-user-project", s.userProject)
-	}
-	for k, vals := range s.headers {
-		req.Header.Del(k)
-		for _, v := range vals {
-			req.Header.Add(k, v)
-		}
-	}
-
-	cancel := context.CancelFunc(func() {})
-	if s.timeout > 0 {
-		var timeoutCtx context.Context
-		timeoutCtx, cancel = context.WithTimeout(req.Context(), s.timeout)
-		req = req.WithContext(timeoutCtx)
-	}
-	defer cancel()
-
-	res, err := s.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error sending request: %w", err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		body, _ := io.ReadAll(res.Body)
-		return sdkerrors.NewSDKDefaultError("API error occurred", res.StatusCode, string(body), res)
-	}
-	if s.dryRun {
-		return nil
-	}
-	return json.NewDecoder(res.Body).Decode(out)
-}
-
-// resolveGlobalString は共通パラメータを フラグ > 環境変数・設定 の順で読む。
-func resolveGlobalString(cmd *cobra.Command, name string) string {
-	if flagutil.FlagChanged(cmd, name) {
-		v, _ := flagutil.GetStringFlag(cmd, name)
-		return v
-	}
-	return config.GetString(name)
 }
 
 func strPtr(s string) *string { return &s }

@@ -38,7 +38,7 @@ Agent Platform へ実際に送る smoke スクリプト（保守者が手元で�
 
 出力:
   PASS|FAIL|SKIP|INFO <name> exit=<code> <要点>。最後に件数を集計し、ログの場所を出す。
-  FAIL が 1 つでもあると終了コードは 1。INFO（image・tts）は結果を記録するだけで失敗にしない。
+  FAIL が 1 つでもあると終了コードは 1。INFO（tts）は結果を記録するだけで失敗にしない。
 EOF
 }
 
@@ -203,7 +203,7 @@ run_check() {
   fi
 }
 
-# info_check NAME 引数...。結果を記録するだけで、失敗にはしない（#11・#12 の未実装が想定）。
+# info_check NAME 引数...。結果を記録するだけで、失敗にはしない（tts は #12 の未実装が想定）。
 info_check() {
   local name="$1"
   shift
@@ -219,6 +219,17 @@ info_check() {
   point="$(first_line "$base.err")"
   [ -z "$point" ] && point="$(first_line "$base.out")"
   printf 'INFO %s exit=%s %s\n' "$name" "$rc" "$(clip "$(mask_text "$point")")"
+}
+
+# file_check NAME PATH。直前のコマンドが書き出したファイルが空でなく存在することを PASS・FAIL にする。
+file_check() {
+  if [ "$dry" = 1 ] || [ -s "$2" ]; then
+    pass=$((pass + 1))
+    printf 'PASS %s exit=- %s\n' "$1" "$(clip "$(basename "$2")")"
+  else
+    fail=$((fail + 1))
+    printf 'FAIL %s exit=- 画像ファイルが書き出されていない: %s\n' "$1" "$(basename "$2")"
+  fi
 }
 
 skip_check() {
@@ -292,8 +303,10 @@ else
   skip_check transcribe-gcs "SMOKE_GCS_URI が無い"
 fi
 
-# image・tts は #11・#12 で実装する。今は失敗が想定なので INFO として結果だけ残す。
-info_check image image "a small red apple on white background" --out "$out_dir/image.png"
+# image は generateContent で呼び、最終画像（thought でないもの）が書き出されることまで確かめる。
+# tts は #12 で実装する。今は失敗が想定なので INFO として結果だけ残す。
+run_check image 0 '' image "a small red apple on white background" --out "$out_dir/image.png"
+file_check image-file "$out_dir/image.png"
 info_check tts tts "Hello from Agent Platform" --out "$out_dir/tts.wav"
 
 probe_text_models=(gemini-2.5-flash gemini-2.5-pro gemini-3.5-flash gemini-3.7-flash gemini-4-argon gemini-4-carbon gemini-4-neon gemini-flash-latest gemini-pro-latest gemma-4-31b-it)
