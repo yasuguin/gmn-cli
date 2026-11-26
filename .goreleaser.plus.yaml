@@ -81,6 +81,11 @@ homebrew_casks:
       email: bot@goreleaser.com
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
 
+# Release の本文は release-please が書く（PR 単位の変更履歴）。goreleaser は既にある Release に
+# asset を足し、本文の後ろに header（免責）を足すだけにする（下の mode: append）。変更履歴は作らない。
+changelog:
+  disable: true
+
 release:
   github:
     owner: yasuguin
