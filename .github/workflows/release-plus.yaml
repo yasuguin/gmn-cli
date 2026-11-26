@@ -1,0 +1,56 @@
+name: Release plus
+
+# plus-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
+# npm・PyPI の公開は後の ticket で job を足す（ここでは contents: write のみ）。
+on:
+  push:
+    tags:
+      - "plus-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # release ノートの土台表示に使う本家の版。本家の internal/cli/version.go が正本。
+      - name: Read upstream CLI version
+        run: |
+          cli_version=$(sed -n 's/^var Version = "\(.*\)"$/\1/p' internal/cli/version.go)
+          if [ -z "$cli_version" ]; then
+            printf '::error::Could not read Version from internal/cli/version.go\n'
+            exit 1
+          fi
+          printf 'PLUS_BASE_VERSION=%s\n' "$cli_version" >> "$GITHUB_ENV"
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --skip=validate -f .goreleaser.plus.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: release-plus-artifacts
+          path: |
+            dist/
+            !dist/*.txt
+          retention-days: 30
