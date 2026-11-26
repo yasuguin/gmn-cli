@@ -1,7 +1,7 @@
 name: Release plus
 
 # plus-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
-# GitHub Releases は goreleaser job、PyPI は pypi job。npm は別 ticket。
+# GitHub Releases は goreleaser job、PyPI は pypi job、npm は npm job。
 on:
   push:
     tags:
@@ -107,3 +107,77 @@ jobs:
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           packages-dir: ${{ runner.temp }}/wheels/
+
+  npm:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    # trusted publishing の対象。environment `npm` は GitHub の Settings で作る（保守者が手で行う）。
+    # npmjs.com 側の trusted publisher の environment 欄は `npm` にそろえる。
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/gemini-headless-cli
+    permissions:
+      # npm の trusted publishing（OIDC）に必要。NPM_TOKEN は使わない。--provenance は npm が GitHub Actions で既定で付けるが、明示する。
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download goreleaser artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-plus-artifacts
+          path: ${{ runner.temp }}/dist
+
+      # npm の trusted publishing は npm CLI 11.5.1 以上が必要（https://docs.npmjs.com/trusted-publishers）。
+      # pnpm の publish は trusted publishing に触れていないため、公開は npm CLI で行う。
+      # registry-url は付けない（.npmrc に token の行が入り、OIDC の認証と食い違うため）。
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+
+      - name: Check npm CLI version
+        run: |
+          npm_version=$(npm --version)
+          printf 'npm %s\n' "$npm_version"
+          # 11.5.1 以上であることを確かめる。sort -V -C は並びが昇順のときだけ成功する。
+          if ! printf '%s\n%s\n' "11.5.1" "$npm_version" | sort -V -C; then
+            printf '::error::npm CLI が 11.5.1 より古い: %s\n' "$npm_version"
+            exit 1
+          fi
+
+      - name: Build npm packages
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#plus-v}"
+          node packaging/npm/build.mjs \
+            --dist "${{ runner.temp }}/dist" \
+            --out "${{ runner.temp }}/npm" \
+            --version "$version"
+
+      # Linux x64 の OS 用バイナリを直接動かし、版が tag と一致することを確かめてから公開する。
+      - name: Smoke test native binary
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#plus-v}"
+          out=$("${{ runner.temp }}/npm/gemini-headless-cli-linux-x64/gemini-headless" --version | head -n 1)
+          echo "$out"
+          case "$out" in
+            "gemini-headless ${version} "*) ;;
+            *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
+          esac
+
+      # OS 別パッケージを先に出し、本体の optionalDependencies が参照する版を揃えてから本体を出す。
+      - name: Publish to npm
+        run: |
+          set -euo pipefail
+          for pkg in gemini-headless-cli-darwin-arm64 gemini-headless-cli-darwin-x64 \
+            gemini-headless-cli-linux-arm64 gemini-headless-cli-linux-x64 \
+            gemini-headless-cli-win32-arm64 gemini-headless-cli-win32-x64 \
+            gemini-headless-cli; do
+            npm publish "${{ runner.temp }}/npm/$pkg" --provenance --access public
+          done
