@@ -18,6 +18,7 @@
 ## リリースの出し方
 
 - タグは手で打ちません。main に PR が入るたびに、release-please がリリース PR（版上げと `CHANGELOG.md` の更新）を作り直します。
+- リリース PR は、`ci`・`docs` しか入っていなくても常に 1 つ開いています（次の版の下書き）。変更履歴に「機能」「修正」「本家の取り込み」が載ったときだけマージして公開します。中身の無い版は出しません。
 - 版は、前のリリースから main に入った commit の conventional commit の種類で決まります。`fix` で patch、`feat` で minor が上がり、`docs`・`ci`・`chore` だけなら上がりません。0.x の間は、破壊的変更（`feat!` など）も minor の上げにとどめます。
 - 本家の取り込みは merge commit で入るので、本家の commit（`feat(cli): …` など）も版の計算に入ります。本家の機能が入ったら minor が上がる、と考えてください。
 - `CHANGELOG.md` と GitHub Release の本文は、PR 単位の変更履歴です（GitHub のリリースノートの生成を使う）。PR の題から自動で付くラベルで「機能」（feat）・「修正」（fix）・「本家の取り込み」（chore(upstream)）に分かれ、それ以外（ci・docs・refactor など）は載りません。本家の取り込みは、取り込みの PR 1 つ分の 1 行になります。
