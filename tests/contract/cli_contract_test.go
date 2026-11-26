@@ -613,6 +613,11 @@ func isolatedEnv(home string, overrides map[string]string) []string {
 		"GOOGLE_GENAI_USE_VERTEXAI": true,
 		"GOOGLE_CLOUD_PROJECT":      true,
 		"GOOGLE_CLOUD_LOCATION":     true,
+
+		// plus: ADC の資格情報の探索先。開発者の gcloud ログインがテストに混ざらないようにする。
+		"GOOGLE_APPLICATION_CREDENTIALS": true,
+		"CLOUDSDK_CONFIG":                true,
+		"GCE_METADATA_HOST":              true,
 	}
 	for key := range overrides {
 		blocked[key] = true

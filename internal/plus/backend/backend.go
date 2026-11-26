@@ -59,7 +59,6 @@ func (s Settings) ServerURL() string {
 var current atomic.Pointer[Settings]
 
 // Current は最後に Apply した設定を返す。Apply 前は nil。
-// #5（ADC）など後続の処理は Apply の中の「アクセストークンが無いとき」の分岐に差し込む。
 func Current() *Settings { return current.Load() }
 
 // RegisterFlags は --backend・--project・--location を足す。fork でないときは何もしない。
@@ -137,6 +136,7 @@ func Apply(cmd *cobra.Command) error {
 		return err
 	}
 	current.Store(&s)
+	adcPending.Store(false)
 	plus.SetAPIKeyDisabled(s.IsVertex())
 	if !s.IsVertex() {
 		return nil
@@ -154,6 +154,11 @@ func Apply(cmd *cobra.Command) error {
 			return err
 		}
 	}
+	// access-token の明示（フラグ・環境変数・keyring・設定）が無ければ ADC に任せる。
+	// 読み出しは最初のリクエストまで遅らせ、whoami や configure のようにリクエストを送らない
+	// コマンドが ADC の有無で失敗しないようにする（トークンはリクエストごとに WrapHTTPClient が付ける）。
+	_, tokenSource := config.ResolveRequestSecurityCredential(cmd, "access-token")
+	adcPending.Store(tokenSource == "unset")
 	// 課金・クォータの project は、明示（フラグ・環境変数・設定）が無ければ project に揃える。
 	if _, changed := flagutil.GetStringFlag(cmd, "user-project"); !changed && config.GetString("user-project") == "" {
 		if err := cmd.Flags().Set("user-project", s.Project); err != nil {
@@ -181,11 +186,22 @@ func WhoamiInfo(cmd *cobra.Command) (map[string]any, []Row) {
 		{"project", s.ProjectSource, s.Project},
 		{"location", s.LocationSource, s.Location},
 	}
+	if s.IsVertex() {
+		rows = append(rows, authRow(cmd))
+	}
 	info := map[string]any{}
 	for _, r := range rows {
 		info[r.Name] = map[string]any{"source": r.Source, "value": r.Value}
 	}
 	return info, rows
+}
+
+// authRow は認証の出どころ。明示の access-token（トークン本体は出さない）か ADC。
+func authRow(cmd *cobra.Command) Row {
+	if _, source := config.ResolveRequestSecurityCredential(cmd, "access-token"); source != "unset" {
+		return Row{"auth", source, "access-token"}
+	}
+	return Row{"auth", authADC, "ADC (read when a request is sent)"}
 }
 
 // AnnotateWhoami は whoami の機械可読出力に backend を足す。fork でないときは何もしない。
@@ -207,7 +223,11 @@ func PrintWhoami(out io.Writer, cmd *cobra.Command) {
 	_, rows := WhoamiInfo(cmd)
 	fmt.Fprintln(out, "Backend:")
 	for _, r := range rows {
-		fmt.Fprintf(out, "  --%-25s [%-7s] %s\n", r.Name, r.Source, r.Value)
+		name := "--" + r.Name
+		if r.Name == "auth" {
+			name = "auth" // フラグではない
+		}
+		fmt.Fprintf(out, "  %-27s [%-7s] %s\n", name, r.Source, r.Value)
 	}
 	fmt.Fprintln(out)
 }
