@@ -256,7 +256,7 @@ fi
 
 if [ -n "$wav" ]; then
   # 既定モデルは modelmap の読み替えで gemini-3.8-flash になり、その旨が stderr に出る。
-  run_check transcribe-default 0 'gemini-3.8-flash' transcribe -i "$wav"
+  run_check transcribe-default 0 'gemini-3.8-flash' transcribe -i "$wav" --out "$out_dir/transcript.md"
   run_check transcribe-unsupported-model 2 'not available' transcribe -i "$wav" --model gemini-3.5-transcribe
 else
   skip_check transcribe-default "wav の素材が作れない（say が無い）"
@@ -280,7 +280,7 @@ if [ -n "${SMOKE_GCS_URI:-}" ]; then
     run_check analyze-gcs 0 '[^[:space:]]' analyze -i "$SMOKE_GCS_URI" "describe"
     case "$(printf '%s' "$SMOKE_GCS_URI" | tr '[:upper:]' '[:lower:]')" in
       *.wav | *.mp3 | *.m4a | *.flac | *.ogg | *.aac | *.aiff)
-        run_check transcribe-gcs 0 '[^[:space:]]' transcribe -i "$SMOKE_GCS_URI"
+        run_check transcribe-gcs 0 '[^[:space:]]' transcribe -i "$SMOKE_GCS_URI" --out "$out_dir/transcript-gcs.md"
         ;;
       *)
         skip_check transcribe-gcs "音声の URI ではない"

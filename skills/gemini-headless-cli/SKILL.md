@@ -1,6 +1,6 @@
 ---
 name: gemini-headless-cli
-description: Use the gemini-headless CLI to call Gemini API or Agent Platform (formerly Vertex AI) headlessly from agents, scripts, and CI, for generation, analysis, transcription, image, TTS, and managed agents.
+description: Call Gemini API or Agent Platform (Vertex AI) headlessly from agents, scripts, and CI with the gemini-headless CLI (generate, analyze, transcribe, image, TTS).
 ---
 
 # gemini-headless
