@@ -33,6 +33,7 @@ jobs:
               run: |
                   bash scripts/plus/sync-upstream_test.sh
                   bash scripts/plus/upstream-sync-pr_test.sh
+                  bash scripts/plus/changelog-label_test.sh
 
             # 本家の commit は作者のアドレスを変えられないので対象外にする。本家の main とタグを refs/upstream/ に入れる。
             - name: Fetch upstream
