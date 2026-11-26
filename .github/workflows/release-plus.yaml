@@ -172,9 +172,22 @@ jobs:
           esac
 
       # OS 別パッケージを先に出し、本体の optionalDependencies が参照する版を揃えてから本体を出す。
+      # npm は公開前のパッケージに trusted publisher を設定できないので、初回だけ secret NPM_TOKEN
+      # （期限の短い granular トークン）で公開する。初回の後に trusted publisher を設定し、secret は消す。
+      # secret が無ければ OIDC（trusted publishing）で公開する。
       - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
+          if [ -n "${NPM_TOKEN:-}" ]; then
+            echo "::warning::NPM_TOKEN で公開する（初回だけの想定。公開後に trusted publisher を設定して secret を消す）"
+            # トークンは一時ファイルの .npmrc にだけ置き、npm にはそのファイルを読ませる。
+            npmrc="${RUNNER_TEMP}/npmrc"
+            umask 077
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" >"$npmrc"
+            export NPM_CONFIG_USERCONFIG="$npmrc"
+          fi
           for pkg in gemini-headless-cli-darwin-arm64 gemini-headless-cli-darwin-x64 \
             gemini-headless-cli-linux-arm64 gemini-headless-cli-linux-x64 \
             gemini-headless-cli-win32-arm64 gemini-headless-cli-win32-x64 \
