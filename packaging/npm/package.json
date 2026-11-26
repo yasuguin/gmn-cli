@@ -1,5 +1,5 @@
 {
-  "name": "gmn-cli",
+  "name": "@yasuguin/gmn-cli",
   "version": "0.0.0",
   "description": "Unofficial fork of google-gemini/gemini-api-cli for agents, scripts, and CI. Not affiliated with Google.",
   "license": "Apache-2.0",

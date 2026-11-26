@@ -56,7 +56,10 @@ tarballs="$work/tarballs"
 mkdir -p "$tarballs"
 (cd "$pkgs/gmn-cli" && pnpm pack --pack-destination "$tarballs" >/dev/null)
 (cd "$native_dir" && pnpm pack --pack-destination "$tarballs" >/dev/null)
-main_tgz="$(ls "$tarballs"/gmn-cli-*.tgz)"
+# 本体は scope 付き（@yasuguin/gmn-cli）。scope なしの gmn-cli は npm が既存の opn-cli に似すぎるとして拒否する。
+main_name="$(node -p "require('$pkgs/gmn-cli/package.json').name")"
+[ "$main_name" = "@yasuguin/gmn-cli" ] || fail "本体の name が @yasuguin/gmn-cli ではない: $main_name"
+main_tgz="$(ls "$tarballs"/yasuguin-gmn-cli-[0-9]*.tgz)"
 native_tgz="$(ls "$tarballs"/yasuguin-gmn-cli-"${os}-${arch}"-*.tgz)"
 [ -f "$main_tgz" ] || fail "本体の tgz が無い"
 [ -f "$native_tgz" ] || fail "OS 用の tgz が無い"
@@ -71,7 +74,7 @@ cat >"$proj/package.json" <<JSON
   "name": "consumer",
   "private": true,
   "dependencies": {
-    "gmn-cli": "file:$main_tgz"
+    "@yasuguin/gmn-cli": "file:$main_tgz"
   }
 }
 JSON
@@ -110,7 +113,7 @@ for cmd in gmn gmn-cli; do
 done
 
 # 7. 同梱の skill が正本と同じ内容であること。
-diff -r "$root/skills/gmn-cli" "$proj/node_modules/gmn-cli/skills/gmn-cli" >/dev/null \
+diff -r "$root/skills/gmn-cli" "$proj/node_modules/@yasuguin/gmn-cli/skills/gmn-cli" >/dev/null \
   || fail "同梱の skill が正本と違う"
 echo "ok: 同梱の skill は正本と同じ"
 

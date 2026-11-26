@@ -27,7 +27,7 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 
 ```bash
 brew install --cask yasuguin/tap/gmn-cli   # macOS only
-npx gmn-cli --help          # or: pnpm dlx gmn-cli --help
+npx @yasuguin/gmn-cli --help    # or: pnpm dlx @yasuguin/gmn-cli --help
 uvx gmn-cli --help          # installs gmn and gmn-cli
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```

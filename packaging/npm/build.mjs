@@ -15,7 +15,8 @@ import { SUPPORTED, binaryFileName, packageName } from './lib/platform.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
-const MAIN_NAME = 'gmn-cli';
+// 本体の出力先のディレクトリ名。npm の名前は package.json の name（@yasuguin/gmn-cli）。
+const MAIN_DIR = 'gmn-cli';
 
 // goreleaser の name_template に合わせたアーカイブ名（例 gmn-cli_Darwin_arm64.tar.gz）。
 const GORELEASER_OS = { darwin: 'Darwin', linux: 'Linux', win32: 'Windows' };
@@ -105,7 +106,7 @@ function buildOsPackage(entry, { dist, out, version, scratch, license, readme })
 }
 
 function buildMainPackage(optionalNames, { out, version, license, readme }) {
-  const dir = join(out, MAIN_NAME);
+  const dir = join(out, MAIN_DIR);
   mkdirSync(dir, { recursive: true });
   cpSync(join(HERE, 'bin'), join(dir, 'bin'), { recursive: true });
   cpSync(join(HERE, 'lib'), join(dir, 'lib'), { recursive: true });

@@ -7,9 +7,9 @@ The `gmn` command is the fork's CLI. It is installed side by side with the offic
 ## Usage
 
 ```sh
-npx gmn-cli --version
-pnpm dlx gmn-cli --version
-npm install -g gmn-cli && gmn --version
+npx @yasuguin/gmn-cli --version
+pnpm dlx @yasuguin/gmn-cli --version
+npm install -g @yasuguin/gmn-cli && gmn --version
 ```
 
 This package has no install scripts. The native binary for your OS and CPU comes from one of the `@yasuguin/gmn-cli-<os>-<arch>` packages listed in `optionalDependencies`.

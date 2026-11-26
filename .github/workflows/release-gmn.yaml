@@ -132,7 +132,7 @@ jobs:
     # npmjs.com 側の trusted publisher の environment 欄は `npm` にそろえる。
     environment:
       name: npm
-      url: https://www.npmjs.com/package/gmn-cli
+      url: https://www.npmjs.com/package/@yasuguin/gmn-cli
     permissions:
       # npm の trusted publishing（OIDC）に必要。NPM_TOKEN は使わない。--provenance は npm が GitHub Actions で既定で付けるが、明示する。
       id-token: write
