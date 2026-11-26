@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# gemini-api-plus（fork）のインストールスクリプト。本家の scripts/install.sh を土台にし、次を変えている。
+# gemini-headless（fork）のインストールスクリプト。本家の scripts/install.sh を土台にし、次を変えている。
 #   - 取得元は fork の GitHub Releases（タグ plus-v<版>）
 #   - checksums.txt で照合し、一致しなければ何も入れずに止まる
-#   - 入れるファイル名は gemini-api-plus。公式の gemini-api は上書きしない
+#   - 入れるファイル名は gemini-headless。公式の gemini-api は上書きしない
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-api-cli-plus/main/scripts/plus/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-headless-cli/main/scripts/plus/install.sh | bash
 #
 # Options:
 #   GEMINI_INSTALL_DIR - 入れ先（既定: 書けるなら /usr/local/bin、だめなら ~/.local/bin）
@@ -16,9 +16,9 @@
 
 set -euo pipefail
 
-REPO="yasuguin/gemini-api-cli-plus"
+REPO="yasuguin/gemini-headless-cli"
 TAG_PREFIX="plus-v"
-BINARY_NAME="gemini-api-plus"
+BINARY_NAME="gemini-headless"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="$HOME/.local/bin"
 VERSION="${GEMINI_VERSION:-latest}"
@@ -110,7 +110,7 @@ main() {
   local platform tag archive base install_dir expected actual
   platform="$(detect_platform)"
   tag="$(resolve_tag)"
-  archive="gemini-api-plus_${platform}.tar.gz"
+  archive="gemini-headless-cli_${platform}.tar.gz"
   base="${DOWNLOAD_BASE}/${tag}"
   install_dir="$(get_install_dir)"
 

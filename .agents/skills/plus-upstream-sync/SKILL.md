@@ -1,6 +1,6 @@
 ---
 name: plus-upstream-sync
-description: fork（gemini-api-cli-plus）へ本家 google-gemini/gemini-api-cli の新しいリリースを取り込むとき、merge が衝突したとき、取り込み後の確認をするときに使う。保守者向けで、利用者向けではない。
+description: fork（gemini-headless-cli）へ本家 google-gemini/gemini-api-cli の新しいリリースを取り込むとき、merge が衝突したとき、取り込み後の確認をするときに使う。保守者向けで、利用者向けではない。
 metadata:
   internal: true
 ---

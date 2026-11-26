@@ -43,8 +43,8 @@ func Testキーチェーンのサービス名は公式と別(t *testing.T) {
 	if err := config.SetKeyringValue("api-key", "dummy"); err != nil {
 		t.Fatal(err)
 	}
-	if !rec.services["gemini-api-plus"] {
-		t.Errorf("サービス名 gemini-api-plus で保存されていない: %v", rec.services)
+	if !rec.services["gemini-headless"] {
+		t.Errorf("サービス名 gemini-headless で保存されていない: %v", rec.services)
 	}
 	if rec.services["gemini-api"] {
 		t.Errorf("公式のサービス名 gemini-api を使っている: %v", rec.services)

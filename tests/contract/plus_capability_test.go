@@ -163,7 +163,7 @@ func TestPlusGeminiAPIのヘルプは本家のAPIキー案内のまま(t *testin
 	if result.err != nil {
 		t.Fatal(result.err)
 	}
-	for _, want := range []string{"No API key found", "Set GEMINI_API_KEY, or run: gemini-api-plus configure", "Stop and ask the user"} {
+	for _, want := range []string{"No API key found", "Set GEMINI_API_KEY, or run: gemini-headless configure", "Stop and ask the user"} {
 		if !strings.Contains(result.stdout, want) {
 			t.Errorf("help に %q が無い:\n%s", want, result.stdout)
 		}

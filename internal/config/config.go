@@ -71,7 +71,7 @@ type Config struct {
 	RetryMaxElapsedTime   string         `yaml:"retry_max_elapsed_time,omitempty"`
 	RetryConnectionErrors string         `yaml:"retry_connection_errors,omitempty"`
 	RetryConfig           string         `yaml:"retry_config,omitempty"`
-	Backend               string         `yaml:"backend,omitempty"`  // plus: gemini-api-plus の接続先
+	Backend               string         `yaml:"backend,omitempty"`  // plus: gemini-headless の接続先
 	Project               string         `yaml:"project,omitempty"`  // plus: Agent Platform の project
 	Location              string         `yaml:"location,omitempty"` // plus: Agent Platform の location
 }

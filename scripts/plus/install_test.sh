@@ -5,19 +5,19 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 installer="$root/scripts/plus/install.sh"
-work="$(mktemp -d "${TMPDIR:-/tmp}/gemini-api-plus-install-test.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/gemini-headless-install-test.XXXXXX")"
 trap 'rm -rf -- "$work"' EXIT
 
 version="9.9.9"
 platform="Linux_x86_64"
-archive="gemini-api-plus_${platform}.tar.gz"
+archive="gemini-headless-cli_${platform}.tar.gz"
 release_dir="$work/release/plus-v${version}"
 mkdir -p "$release_dir" "$work/src"
 
 # 偽のバイナリを固めて、本物と同じ名前のアーカイブと checksums.txt を作る。
-printf '#!/bin/sh\necho fork-binary\n' >"$work/src/gemini-api-plus"
-chmod +x "$work/src/gemini-api-plus"
-tar -czf "$release_dir/$archive" -C "$work/src" gemini-api-plus
+printf '#!/bin/sh\necho fork-binary\n' >"$work/src/gemini-headless"
+chmod +x "$work/src/gemini-headless"
+tar -czf "$release_dir/$archive" -C "$work/src" gemini-headless
 shasum -a 256 "$release_dir/$archive" | sed "s| $release_dir/| |" >"$release_dir/checksums.txt"
 
 fail() {
@@ -41,15 +41,15 @@ run_installer() {
     bash "$installer" >"$install_dir.log" 2>&1
 }
 
-# 1. checksum が合えば gemini-api-plus が入り、公式の gemini-api は変わらない。
+# 1. checksum が合えば gemini-headless が入り、公式の gemini-api は変わらない。
 ok_dir="$work/bin-ok"
 official_bin_setup "$ok_dir"
 run_installer "$ok_dir" || {
   cat "$ok_dir.log" >&2
   fail "checksum が合うのに install が失敗した"
 }
-[ -x "$ok_dir/gemini-api-plus" ] || fail "gemini-api-plus が実行可能な形で入っていない"
-[ "$("$ok_dir/gemini-api-plus")" = "fork-binary" ] || fail "入ったバイナリが fixture と違う"
+[ -x "$ok_dir/gemini-headless" ] || fail "gemini-headless が実行可能な形で入っていない"
+[ "$("$ok_dir/gemini-headless")" = "fork-binary" ] || fail "入ったバイナリが fixture と違う"
 [ "$(cat "$ok_dir/gemini-api")" = "official gemini-api" ] || fail "公式の gemini-api が上書きされた"
 echo "ok: checksum 一致で入る・gemini-api を上書きしない"
 
@@ -66,7 +66,7 @@ if run_installer "$bad_dir"; then
 fi
 cp "$work/checksums.good" "$release_dir/checksums.txt"
 grep -q -i "checksum" "$bad_dir.log" || fail "checksum 不一致の理由が出ていない"
-[ ! -e "$bad_dir/gemini-api-plus" ] || fail "checksum 不一致なのにバイナリが入った"
+[ ! -e "$bad_dir/gemini-headless" ] || fail "checksum 不一致なのにバイナリが入った"
 [ "$(cat "$bad_dir/gemini-api")" = "official gemini-api" ] || fail "不一致時に公式の gemini-api が変わった"
 echo "ok: checksum 不一致で止まり、何も入れない"
 
@@ -79,7 +79,7 @@ if run_installer "$missing_dir"; then
   fail "checksum 行が無いのに成功した"
 fi
 cp "$work/checksums.good" "$release_dir/checksums.txt"
-[ ! -e "$missing_dir/gemini-api-plus" ] || fail "checksum 行が無いのにバイナリが入った"
+[ ! -e "$missing_dir/gemini-headless" ] || fail "checksum 行が無いのにバイナリが入った"
 echo "ok: checksum 行が無ければ止まる"
 
 echo "install_test: all passed"

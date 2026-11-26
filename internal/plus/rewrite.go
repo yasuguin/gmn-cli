@@ -10,7 +10,7 @@ import (
 // 置き換え対象の判定は前後 1 文字で行う。
 //   - 前が名前に使える文字・'.'・'/' なら対象外（URL・パス・別名の一部を壊さない）。
 //     ただし設定ファイルの場所 ".config/gemini-api/" は対象にする。
-//   - 後ろが名前に使える文字なら対象外（gemini-api-cli、gemini-api-plus など）。
+//   - 後ろが名前に使える文字なら対象外（gemini-api-cli など）。
 //   - 後ろが '/' なら設定ファイルの場所のときだけ対象にする。
 const configDirPrefix = ".config/"
 
@@ -18,7 +18,7 @@ func isNameByte(b byte) bool {
 	return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9' || b == '_' || b == '-'
 }
 
-// ReplaceCommandName は text 中のコマンド名 gemini-api を gemini-api-plus に置き換える。
+// ReplaceCommandName は text 中のコマンド名 gemini-api を gemini-headless に置き換える。
 func ReplaceCommandName(text string) string {
 	return string(replaceCommandName(nil, []byte(text)))
 }

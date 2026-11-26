@@ -1,4 +1,4 @@
-// Package backend は gemini-api-plus の接続先（Gemini API / Agent Platform）の解決を担う。
+// Package backend は gemini-headless の接続先（Gemini API / Agent Platform）の解決を担う。
 //
 // Agent Platform（旧 Vertex AI）の URL は本家の
 // "{server-url}/{api-version}/interactions" の形に収まるので、

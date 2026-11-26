@@ -1,4 +1,4 @@
-// Package app は gemini-api-plus の起動処理。本家の cli パッケージを呼び出す前に、
+// Package app は gemini-headless の起動処理。本家の cli パッケージを呼び出す前に、
 // 設定の場所・出力のコマンド名を fork 用に切り替える。
 package app
 
@@ -14,7 +14,7 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/plus"
 )
 
-// Run は gemini-api-plus を実行して終了コードを返す。
+// Run は gemini-headless を実行して終了コードを返す。
 func Run(args []string, stdout, stderr io.Writer) int {
 	plus.Enable()
 	// 本家は PersistentPreRunE と --help 時の認証確認で config.Init("gemini-api", ...) を呼ぶが、

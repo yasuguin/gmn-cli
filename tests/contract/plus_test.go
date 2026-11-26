@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// fork 用 CLI（gemini-api-plus）の契約。公式の gemini-api と並べて入れても混ざらないことを固定する。
+// fork 用 CLI（gemini-headless）の契約。公式の gemini-api と並べて入れても混ざらないことを固定する。
 
 var (
 	plusBinaryOnce sync.Once
@@ -26,7 +26,7 @@ var (
 	plusBinaryErr  error
 )
 
-// buildPlusBinary は gemini-api-plus を実行ファイル名どおりにビルドする。
+// buildPlusBinary は gemini-headless を実行ファイル名どおりにビルドする。
 func buildPlusBinary(t *testing.T) string {
 	t.Helper()
 	plusBinaryOnce.Do(func() {
@@ -35,16 +35,16 @@ func buildPlusBinary(t *testing.T) string {
 			plusBinaryErr = err
 			return
 		}
-		dir, err := os.MkdirTemp("", "gemini-api-plus-contract-")
+		dir, err := os.MkdirTemp("", "gemini-headless-contract-")
 		if err != nil {
 			plusBinaryErr = err
 			return
 		}
-		plusBinaryPath = filepath.Join(dir, "gemini-api-plus")
-		cmd := exec.Command("go", "build", "-o", plusBinaryPath, "./cmd/gemini-api-plus")
+		plusBinaryPath = filepath.Join(dir, "gemini-headless")
+		cmd := exec.Command("go", "build", "-o", plusBinaryPath, "./cmd/gemini-headless")
 		cmd.Dir = root
 		if out, err := cmd.CombinedOutput(); err != nil {
-			plusBinaryErr = fmt.Errorf("build gemini-api-plus: %v\n%s", err, out)
+			plusBinaryErr = fmt.Errorf("build gemini-headless: %v\n%s", err, out)
 		}
 	})
 	if plusBinaryErr != nil {
@@ -64,7 +64,7 @@ func runPlus(t *testing.T, home string, env map[string]string, args ...string) c
 	return commandResult{stdout: stdout.String(), stderr: stderr.String(), err: err}
 }
 
-// bareUpstreamName は gemini-api-plus・gemini-api-cli・URL・パスの一部ではない、
+// bareUpstreamName は gemini-headless・gemini-api-cli・URL・パスの一部ではない、
 // 単独のコマンド名 gemini-api を探す。
 var bareUpstreamName = regexp.MustCompile(`(^|[^A-Za-z0-9_./-])gemini-api($|[^A-Za-z0-9_/-])`)
 
@@ -87,15 +87,15 @@ func allCommandPaths(c *cobra.Command, prefix []string, out *[][]string) {
 
 func TestPlusバイナリ名がgemini_api_plusでhelpが動く(t *testing.T) {
 	bin := buildPlusBinary(t)
-	if filepath.Base(bin) != "gemini-api-plus" {
+	if filepath.Base(bin) != "gemini-headless" {
 		t.Fatalf("実行ファイル名 = %q", filepath.Base(bin))
 	}
 	result := runPlus(t, t.TempDir(), nil, "--help")
 	if result.err != nil {
 		t.Fatalf("--help failed: %v\n%s", result.err, result.stderr)
 	}
-	if !strings.Contains(result.stdout, "gemini-api-plus") {
-		t.Errorf("help にコマンド名 gemini-api-plus が出ていない:\n%s", result.stdout)
+	if !strings.Contains(result.stdout, "gemini-headless") {
+		t.Errorf("help にコマンド名 gemini-headless が出ていない:\n%s", result.stdout)
 	}
 }
 
@@ -145,8 +145,8 @@ func TestPlusエラーの案内もgemini_api_plus(t *testing.T) {
 		if err := json.Unmarshal([]byte(result.stderr), &parsed); err != nil {
 			t.Fatalf("構造化エラーが JSON ではない: %v\n%s", err, result.stderr)
 		}
-		if !strings.Contains(strings.Join(parsed.Hints, "\n"), "gemini-api-plus whoami") {
-			t.Errorf("hints に gemini-api-plus whoami が無い: %v", parsed.Hints)
+		if !strings.Contains(strings.Join(parsed.Hints, "\n"), "gemini-headless whoami") {
+			t.Errorf("hints に gemini-headless whoami が無い: %v", parsed.Hints)
 		}
 		assertNoUpstreamName(t, "agent-mode のエラー", result.stderr)
 	})
@@ -156,8 +156,8 @@ func TestPlusエラーの案内もgemini_api_plus(t *testing.T) {
 		if result.err == nil {
 			t.Fatal("403 で失敗するはず")
 		}
-		if !strings.Contains(result.stderr, "gemini-api-plus") {
-			t.Errorf("案内に gemini-api-plus が出ていない:\n%s", result.stderr)
+		if !strings.Contains(result.stderr, "gemini-headless") {
+			t.Errorf("案内に gemini-headless が出ていない:\n%s", result.stderr)
 		}
 		assertNoUpstreamName(t, "通常のエラー", result.stderr)
 	})
@@ -197,7 +197,7 @@ func TestPlus設定ファイルはgemini_api_plus用で公式の設定を読ま�
 	if result := runPlus(t, home, nil, "--no-interactive", "--no-keyring", "configure", "--api-key", "FORK"); result.err != nil {
 		t.Fatalf("configure failed: %v\n%s", result.err, result.stderr)
 	}
-	if _, err := os.Stat(filepath.Join(home, ".config", "gemini-api-plus", "config.yaml")); err != nil {
+	if _, err := os.Stat(filepath.Join(home, ".config", "gemini-headless", "config.yaml")); err != nil {
 		t.Errorf("fork 用の設定ファイルが書かれていない: %v", err)
 	}
 	official, _ := os.ReadFile(filepath.Join(officialDir, "config.yaml"))
@@ -217,7 +217,7 @@ func TestPlusのversionにfork版と本家の版が出る(t *testing.T) {
 	if result.err != nil {
 		t.Fatalf("--version failed: %v\n%s", result.err, result.stderr)
 	}
-	if !regexp.MustCompile(`^gemini-api-plus 0\.1\.0\S* \(base gemini-api-cli 0\.5\.0\)\n`).MatchString(result.stdout) {
+	if !regexp.MustCompile(`^gemini-headless 0\.1\.0\S* \(base gemini-api-cli 0\.5\.0\)\n`).MatchString(result.stdout) {
 		t.Errorf("--version = %q", result.stdout)
 	}
 
@@ -226,7 +226,7 @@ func TestPlusのversionにfork版と本家の版が出る(t *testing.T) {
 	if err := json.Unmarshal([]byte(machine.stdout), &info); err != nil {
 		t.Fatalf("version -o json が JSON ではない: %v\n%s", err, machine.stdout)
 	}
-	if info["name"] != "gemini-api-plus" || !strings.HasPrefix(info["version"], "0.1.0") || info["base_version"] != "0.5.0" {
+	if info["name"] != "gemini-headless" || !strings.HasPrefix(info["version"], "0.1.0") || info["base_version"] != "0.5.0" {
 		t.Errorf("version -o json = %v", info)
 	}
 }
@@ -244,7 +244,7 @@ func TestPlusのUserAgentにfork名が入る(t *testing.T) {
 	if result := runPlus(t, t.TempDir(), nil, args...); result.err != nil {
 		t.Fatalf("generate failed: %v\n%s", result.err, result.stderr)
 	}
-	if ua := <-agents; !strings.HasPrefix(ua, "gemini-api-plus/0.1.0") || !strings.Contains(ua, "google-genai-cli/") {
+	if ua := <-agents; !strings.HasPrefix(ua, "gemini-headless/0.1.0") || !strings.Contains(ua, "google-genai-cli/") {
 		t.Errorf("User-Agent = %q", ua)
 	}
 }

@@ -1,19 +1,19 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# fork（gemini-api-plus）用のリリース設定。本家の .goreleaser.yaml とは別ファイルで、本家の設定は変えない。
+# fork（gemini-headless）用のリリース設定。本家の .goreleaser.yaml とは別ファイルで、本家の設定は変えない。
 # タグは plus-v0.1.0 形式。GoReleaser OSS は monorepo.tag_prefix（Pro 限定）を使えない。
 # 版は .Tag から "plus-v" を trimprefix で外して得る（ldflags の plus.Version）。
 # 現在のタグを semver として解析する検査は --skip=validate でだけ外せる（release workflow と snapshot が付ける）。
 # そのため ctx.Semver は空になり、release の prerelease: auto は常に正式版扱いになる。
 version: 2
 
-project_name: gemini-api-plus
+project_name: gemini-headless-cli
 
 # 本家の .goreleaser.yaml は before に go mod tidy を置くが、snapshot で go.mod を書き換えないよう置かない。
 
 builds:
-  - id: gemini-api-plus
-    main: ./cmd/gemini-api-plus
-    binary: gemini-api-plus
+  - id: gemini-headless
+    main: ./cmd/gemini-headless
+    binary: gemini-headless
     env:
       - CGO_ENABLED=0
     goos:
@@ -29,7 +29,7 @@ builds:
       - -X github.com/google-gemini/gemini-api-cli/internal/plus.Version={{ trimprefix .Tag "plus-v" }}
 
 archives:
-  - id: gemini-api-plus
+  - id: gemini-headless
     formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_
@@ -48,12 +48,12 @@ archives:
 # Homebrew: GoReleaser v2.10 で brews（Formula）は deprecated、後継の homebrew_casks を使う。
 # CLI のバイナリは binaries で入れられる。cask は macOS 専用（Linux の Homebrew には出さない）。
 homebrew_casks:
-  - name: gemini-api-plus
+  - name: gemini-headless-cli
     ids:
-      - gemini-api-plus
+      - gemini-headless
     binaries:
-      - gemini-api-plus
-    homepage: https://github.com/yasuguin/gemini-api-cli-plus
+      - gemini-headless
+    homepage: https://github.com/yasuguin/gemini-headless-cli
     description: "Unofficial fork of google-gemini/gemini-api-cli (Gemini API and Agent Platform). Not affiliated with Google."
     repository:
       owner: yasuguin
@@ -69,7 +69,7 @@ homebrew_casks:
 release:
   github:
     owner: yasuguin
-    name: gemini-api-cli-plus
+    name: gemini-headless-cli
   draft: false
   prerelease: auto
   mode: append

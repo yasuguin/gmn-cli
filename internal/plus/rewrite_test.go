@@ -2,6 +2,7 @@ package plus_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/google-gemini/gemini-api-cli/internal/plus"
@@ -9,12 +10,11 @@ import (
 
 func TestReplaceCommandName(t *testing.T) {
 	cases := []struct{ name, in, want string }{
-		{"コマンド名", `Run: gemini-api configure`, `Run: gemini-api-plus configure`},
-		{"引用符内", `"gemini-api whoami"`, `"gemini-api-plus whoami"`},
-		{"文末のピリオド", `use gemini-api.`, `use gemini-api-plus.`},
-		{"設定ファイルの場所", `~/.config/gemini-api/config.yaml`, `~/.config/gemini-api-plus/config.yaml`},
+		{"コマンド名", `Run: gemini-api configure`, `Run: gemini-headless configure`},
+		{"引用符内", `"gemini-api whoami"`, `"gemini-headless whoami"`},
+		{"文末のピリオド", `use gemini-api.`, `use gemini-headless.`},
+		{"設定ファイルの場所", `~/.config/gemini-api/config.yaml`, `~/.config/gemini-headless/config.yaml`},
 		{"リポジトリ名は対象外", `gemini-api-cli`, `gemini-api-cli`},
-		{"置き換え済みは二重にしない", `gemini-api-plus agent`, `gemini-api-plus agent`},
 		{"URL は対象外", `https://github.com/google-gemini/gemini-api`, `https://github.com/google-gemini/gemini-api`},
 		{"go install のパスは対象外", `./cmd/gemini-api`, `./cmd/gemini-api`},
 		{"別の単語の一部は対象外", `xgemini-api`, `xgemini-api`},
@@ -26,6 +26,13 @@ func TestReplaceCommandName(t *testing.T) {
 				t.Errorf("ReplaceCommandName(%q) = %q, want %q", tc.in, got, tc.want)
 			}
 		})
+	}
+}
+
+// 置き換え後の名前は本家のコマンド名を含まないので、出力が再び置き換えられることはない。
+func TestForkNameは本家のコマンド名を含まない(t *testing.T) {
+	if strings.Contains(plus.Name, "gemini-api") {
+		t.Errorf("plus.Name = %q は本家の gemini-api を含む", plus.Name)
 	}
 }
 

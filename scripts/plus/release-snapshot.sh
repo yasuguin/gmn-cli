@@ -13,8 +13,8 @@ goreleaser_module="github.com/goreleaser/goreleaser/v2@v2.20.3"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 
-dist="$(mktemp -d "${TMPDIR:-/tmp}/gemini-api-plus-dist.XXXXXX")"
-config_dir="$(mktemp -d "${TMPDIR:-/tmp}/gemini-api-plus-config.XXXXXX")"
+dist="$(mktemp -d "${TMPDIR:-/tmp}/gemini-headless-dist.XXXXXX")"
+config_dir="$(mktemp -d "${TMPDIR:-/tmp}/gemini-headless-config.XXXXXX")"
 config="$config_dir/.goreleaser.plus.yaml"
 # dist は repo 直下に作らない（この repo に .gitignore が無いため）。設定の先頭に絶対パスの dist を足す。
 {
@@ -43,7 +43,7 @@ fi
 echo "== dist: $dist"
 
 bins=()
-while IFS= read -r line; do bins+=("$line"); done < <(find "$dist" -type f \( -name gemini-api-plus -o -name gemini-api-plus.exe \) | sort)
+while IFS= read -r line; do bins+=("$line"); done < <(find "$dist" -type f \( -name gemini-headless -o -name gemini-headless.exe \) | sort)
 echo "== binaries (${#bins[@]})"
 printf '%s\n' "${bins[@]}"
 if [ "${#bins[@]}" -ne 6 ]; then
@@ -86,14 +86,14 @@ version_line="$("$native" --version | head -n 1)"
 echo "== $native --version"
 echo "$version_line"
 case "$version_line" in
-  "gemini-api-plus ${version} (base gemini-api-cli ${base_version})") ;;
+  "gemini-headless ${version} (base gemini-api-cli ${base_version})") ;;
   *)
-    echo "--version が期待と違う（期待: gemini-api-plus ${version} (base gemini-api-cli ${base_version})）" >&2
+    echo "--version が期待と違う（期待: gemini-headless ${version} (base gemini-api-cli ${base_version})）" >&2
     exit 1
     ;;
 esac
 
-cask="$(find "$dist" -name 'gemini-api-plus.rb' | head -n 1 || true)"
+cask="$(find "$dist" -name 'gemini-headless-cli.rb' | head -n 1 || true)"
 if [ -n "$cask" ]; then
   echo "== cask: $cask"
   cat "$cask"

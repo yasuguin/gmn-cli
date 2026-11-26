@@ -61,7 +61,7 @@ jobs:
     # trusted publishing の対象。environment `pypi` は GitHub の Settings で作る（保守者が手で行う）。
     environment:
       name: pypi
-      url: https://pypi.org/project/gemini-api-cli-plus/
+      url: https://pypi.org/project/gemini-headless-cli/
     permissions:
       # PyPI の trusted publishing（OIDC）に必要。API token は使わない。
       id-token: write
@@ -96,10 +96,10 @@ jobs:
         run: |
           version="${PLUS_VERSION#plus-v}"
           wheel=$(ls "${{ runner.temp }}"/wheels/*manylinux_2_17_x86_64*.whl)
-          out=$(uvx --from "$wheel" gemini-api-cli-plus --version | head -n 1)
+          out=$(uvx --from "$wheel" gemini-headless-cli --version | head -n 1)
           echo "$out"
           case "$out" in
-            "gemini-api-plus ${version} "*) ;;
+            "gemini-headless ${version} "*) ;;
             *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
           esac
 

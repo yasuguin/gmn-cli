@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-// gemini-api-plus が Agent Platform で ADC（Application Default Credentials）から
+// gemini-headless が Agent Platform で ADC（Application Default Credentials）から
 // アクセストークンを取る契約。実際の Google には接続せず、token_uri をスタブに向ける。
 
 // tokenStub は OAuth のトークンエンドポイントのスタブ。呼ばれた回数を数え、tok-1, tok-2... を返す。

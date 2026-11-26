@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// gemini-api-plus の gs:// 入力の契約。Agent Platform には Files API が無いので、
+// gemini-headless の gs:// 入力の契約。Agent Platform には Files API が無いので、
 // 大きなファイルは Cloud Storage の URI を file data として渡す。
 
 // gcsVertexArgs は Agent Platform の接続先を stub に向けて組み立てる。--access-token で ADC の読み出しを避ける。
