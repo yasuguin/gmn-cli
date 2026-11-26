@@ -1,0 +1,36 @@
+name: noreply
+
+# PR の commit が GitHub の noreply アドレスで作られているかを確かめる（公開 repo の履歴に個人のアドレスを残さない）。
+# main の ruleset の必須チェック。job 名 noreply を変えると ruleset の設定も直す必要がある。
+# dev-policy: keep-pull_request — PR の commit を見る必須チェックなので、PR で起動しないと意味がない（#21・#22）。
+# 中身は一時 repo のテストと git log だけで、数秒で終わる。
+on:
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    noreply:
+        runs-on: ubuntu-latest
+        env:
+            UPSTREAM_URL: https://github.com/google-gemini/gemini-api-cli.git
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.event.pull_request.head.sha }}
+
+            # 検査のテスト自体を先に回す（軽い。一時 repo だけで完結する）。
+            - name: Test the check
+              run: bash scripts/plus/check-noreply_test.sh
+
+            # 本家の commit は作者のアドレスを変えられないので対象外にする。本家の main とタグを refs/upstream/ に入れる。
+            - name: Fetch upstream
+              run: git fetch --no-tags "$UPSTREAM_URL" '+refs/heads/main:refs/upstream/main' '+refs/tags/*:refs/upstream/tags/*'
+
+            - name: Check commit addresses
+              env:
+                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+              run: bash scripts/plus/check-noreply.sh "$BASE_SHA" "$HEAD_SHA"
