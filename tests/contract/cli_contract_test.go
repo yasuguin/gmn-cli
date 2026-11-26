@@ -595,22 +595,24 @@ func isolatedEnv(home string, overrides map[string]string) []string {
 		"GEMINI_ACCESS_TOKEN": true,
 		"GEMINI_API_VERSION":  true,
 		"GEMINI_USER_PROJECT": true,
-		// gemini-api-plus の接続先。実行環境の値がテストに混ざらないようにする。
+		"CLAUDECODE":          true,
+		"CLAUDE_CODE":         true,
+		"CURSOR_AGENT":        true,
+		"CODEX":               true,
+		"AIDER":               true,
+		"CLINE":               true,
+		"WINDSURF_AGENT":      true,
+		"GITHUB_COPILOT":      true,
+		"AMAZON_Q":            true,
+		"GEMINI_CODE_ASSIST":  true,
+		"SRC_CODY":            true,
+		"FORCE_AGENT_MODE":    true,
+
+		// plus: gemini-api-plus の接続先。実行環境の値がテストに混ざらないようにする。
+		// 本家の行の桁揃えを崩さないよう、空行で区切って末尾に置く。
 		"GOOGLE_GENAI_USE_VERTEXAI": true,
 		"GOOGLE_CLOUD_PROJECT":      true,
 		"GOOGLE_CLOUD_LOCATION":     true,
-		"CLAUDECODE":                true,
-		"CLAUDE_CODE":               true,
-		"CURSOR_AGENT":              true,
-		"CODEX":                     true,
-		"AIDER":                     true,
-		"CLINE":                     true,
-		"WINDSURF_AGENT":            true,
-		"GITHUB_COPILOT":            true,
-		"AMAZON_Q":                  true,
-		"GEMINI_CODE_ASSIST":        true,
-		"SRC_CODY":                  true,
-		"FORCE_AGENT_MODE":          true,
 	}
 	for key := range overrides {
 		blocked[key] = true
