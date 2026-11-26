@@ -91,7 +91,7 @@ if (( dry_run )); then
 	else
 		echo "  1. upstream remote を $UPSTREAM_URL で追加"
 	fi
-	echo "  2. 本家の $tag を $ref に fetch（fork の plus-v* とは別の名前空間）"
+	echo "  2. 本家の $tag を $ref に fetch（fork の headless-v* とは別の名前空間）"
 	echo "  3. 現在のブランチ $branch に git merge --no-ff ${ref}（rebase はしない）"
 	echo "  4. plus: の印の行が merge 前より減っていないか確かめる"
 	if (( skip_tests )); then

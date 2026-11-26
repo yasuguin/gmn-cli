@@ -144,7 +144,7 @@ def main() -> None:
     )
     parser.add_argument("--out", type=Path, required=True, help="wheel の出力先")
     parser.add_argument(
-        "--version", required=True, help="fork の版（plus-v を外したもの。例 0.1.0）"
+        "--version", required=True, help="fork の版（headless-v を外したもの。例 0.1.0）"
     )
     parser.add_argument("--license", type=Path, default=ROOT / "LICENSE")
     parser.add_argument("--readme", type=Path, default=HERE / "README.md")

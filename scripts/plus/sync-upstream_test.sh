@@ -54,7 +54,7 @@ make_fixture() {
 	git -C "$up" tag v0.4.0
 
 	git clone -q --no-tags "$up" "$fork"
-	git -C "$fork" tag plus-v0.1.0
+	git -C "$fork" tag headless-v0.1.0
 	if [[ "$mode" == plain ]]; then
 		printf 'package main\n\nfunc main() {\n\trun() // plus: fork の差し込み\n}\n' >"$fork/cli.go"
 		git -C "$fork" commit -q -am "fork の差し込み"
@@ -115,15 +115,15 @@ else
 	ng "(c) plus: の欠落を検出しない（rc=${rc}）: $(cat "$d/out")"
 fi
 
-# (d) 本家のタグは upstream/ の名前空間に入り、fork の plus-v* や同名のタグには入らない。
+# (d) 本家のタグは upstream/ の名前空間に入り、fork の headless-v* や同名のタグには入らない。
 d="$work/d"; mkdir -p "$d"; make_fixture "$d" plain; make_release "$d/upstream" readme
 rc=$(run_sync "$d/fork" "$d/out" --skip-tests v0.5.0)
-plus_before=$(git -C "$d/fork" tag -l 'plus-v*')
+plus_before=$(git -C "$d/fork" tag -l 'headless-v*')
 if [[ "$rc" == 0 ]] && git -C "$d/fork" rev-parse -q --verify refs/tags/upstream/v0.5.0 >/dev/null \
-	&& [[ -z "$(git -C "$d/fork" tag -l v0.5.0)" ]] && [[ "$plus_before" == "plus-v0.1.0" ]]; then
+	&& [[ -z "$(git -C "$d/fork" tag -l v0.5.0)" ]] && [[ "$plus_before" == "headless-v0.1.0" ]]; then
 	ok "(d) 本家のタグは refs/tags/upstream/v0.5.0 に入り、fork に v0.5.0 のタグは作られない"
 else
-	ng "(d) タグの名前空間が分かれていない（rc=$rc, plus-v=${plus_before}）"
+	ng "(d) タグの名前空間が分かれていない（rc=$rc, headless-v=${plus_before}）"
 fi
 
 # (e) 存在しないタグは fetch に失敗して 1 で終わる。merge は走らない。

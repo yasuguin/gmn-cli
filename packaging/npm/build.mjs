@@ -33,9 +33,9 @@ function parseArgs(argv) {
   for (const k of ['dist', 'out', 'version']) {
     if (!args[k]) throw new Error(`--${k} が無い`);
   }
-  // 版は npm の semver として通る形だけ許す（例 0.1.0・0.1.0-rc.1）。plus-v は含めない。
+  // 版は npm の semver として通る形だけ許す（例 0.1.0・0.1.0-rc.1）。headless-v は含めない。
   if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(args.version)) {
-    throw new Error(`--version が semver ではない: ${args.version}（plus-v は外す）`);
+    throw new Error(`--version が semver ではない: ${args.version}（headless-v は外す）`);
   }
   return args;
 }

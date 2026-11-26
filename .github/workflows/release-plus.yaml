@@ -1,11 +1,11 @@
 name: Release plus
 
-# plus-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
+# headless-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
 # GitHub Releases は goreleaser job、PyPI は pypi job、npm は npm job。
 on:
   push:
     tags:
-      - "plus-v*"
+      - "headless-v*"
 
 permissions:
   contents: write
@@ -83,7 +83,7 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#plus-v}"
+          version="${PLUS_VERSION#headless-v}"
           uv run --no-project packaging/pypi/build_wheels.py \
             --dist "${{ runner.temp }}/dist" \
             --out "${{ runner.temp }}/wheels" \
@@ -94,7 +94,7 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#plus-v}"
+          version="${PLUS_VERSION#headless-v}"
           wheel=$(ls "${{ runner.temp }}"/wheels/*manylinux_2_17_x86_64*.whl)
           out=$(uvx --from "$wheel" gemini-headless-cli --version | head -n 1)
           echo "$out"
@@ -152,7 +152,7 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#plus-v}"
+          version="${PLUS_VERSION#headless-v}"
           node packaging/npm/build.mjs \
             --dist "${{ runner.temp }}/dist" \
             --out "${{ runner.temp }}/npm" \
@@ -163,7 +163,7 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#plus-v}"
+          version="${PLUS_VERSION#headless-v}"
           out=$("${{ runner.temp }}/npm/gemini-headless-cli-linux-x64/gemini-headless" --version | head -n 1)
           echo "$out"
           case "$out" in

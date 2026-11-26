@@ -11,7 +11,7 @@ trap 'rm -rf -- "$work"' EXIT
 version="9.9.9"
 platform="Linux_x86_64"
 archive="gemini-headless-cli_${platform}.tar.gz"
-release_dir="$work/release/plus-v${version}"
+release_dir="$work/release/headless-v${version}"
 mkdir -p "$release_dir" "$work/src"
 
 # 偽のバイナリを固めて、本物と同じ名前のアーカイブと checksums.txt を作る。

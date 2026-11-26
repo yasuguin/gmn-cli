@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # gemini-headless（fork）のインストールスクリプト。本家の scripts/install.sh を土台にし、次を変えている。
-#   - 取得元は fork の GitHub Releases（タグ plus-v<版>）
+#   - 取得元は fork の GitHub Releases（タグ headless-v<版>）
 #   - checksums.txt で照合し、一致しなければ何も入れずに止まる
 #   - 入れるファイル名は gemini-headless。公式の gemini-api は上書きしない
 #
@@ -10,14 +10,14 @@
 #
 # Options:
 #   GEMINI_INSTALL_DIR - 入れ先（既定: 書けるなら /usr/local/bin、だめなら ~/.local/bin）
-#   GEMINI_VERSION     - 版（例 0.1.0 または plus-v0.1.0）。既定は latest
+#   GEMINI_VERSION     - 版（例 0.1.0 または headless-v0.1.0）。既定は latest
 #
 # Windows は対象外。zip を Releases から手で取る。
 
 set -euo pipefail
 
 REPO="yasuguin/gemini-headless-cli"
-TAG_PREFIX="plus-v"
+TAG_PREFIX="headless-v"
 BINARY_NAME="gemini-headless"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="$HOME/.local/bin"

@@ -24,7 +24,7 @@ brew install --cask yasuguin/tap/gemini-headless-cli   # macOS only
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-headless-cli/main/scripts/plus/install.sh | bash
 ```
 
-The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gemini-headless-cli/releases) (tags `plus-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GEMINI_INSTALL_DIR` to choose the directory, and `GEMINI_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
+The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gemini-headless-cli/releases) (tags `headless-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GEMINI_INSTALL_DIR` to choose the directory, and `GEMINI_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
 
 ## Quick start
 

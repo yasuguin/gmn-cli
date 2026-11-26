@@ -28,8 +28,8 @@ if [ -z "$base_version" ]; then
   exit 1
 fi
 
-# CurrentTag を plus-v<版> に固定する。実タグが無くても goreleaser は GORELEASER_CURRENT_TAG を使う。
-export GORELEASER_CURRENT_TAG="plus-v${version}"
+# CurrentTag を headless-v<版> に固定する。実タグが無くても goreleaser は GORELEASER_CURRENT_TAG を使う。
+export GORELEASER_CURRENT_TAG="headless-v${version}"
 export PLUS_BASE_VERSION="$base_version"
 
 if command -v goreleaser >/dev/null 2>&1; then

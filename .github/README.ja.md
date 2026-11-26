@@ -24,7 +24,7 @@ brew install --cask yasuguin/tap/gemini-headless-cli   # macOS only
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-headless-cli/main/scripts/plus/install.sh | bash
 ```
 
-インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gemini-headless-cli/releases)（タグ `plus-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GEMINI_INSTALL_DIR` を、バージョンを固定するには `GEMINI_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
+インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gemini-headless-cli/releases)（タグ `headless-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GEMINI_INSTALL_DIR` を、バージョンを固定するには `GEMINI_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
 
 ## クイックスタート
 
