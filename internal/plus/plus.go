@@ -55,3 +55,15 @@ func AnnotateVersionInfo(info map[string]any, baseVersion string) {
 	info["version"] = Version
 	info["base_version"] = baseVersion
 }
+
+var apiKeyDisabled atomic.Bool
+
+// SetAPIKeyDisabled は API key を送らない状態にする。Agent Platform は OAuth のアクセストークンだけを受け付け、
+// 環境変数や設定に残った Gemini API の API key を別の接続先へ送らないために使う。
+func SetAPIKeyDisabled(v bool) { apiKeyDisabled.Store(v) }
+
+// APIKeyDisabled は API key を無視するかを返す。
+func APIKeyDisabled() bool { return apiKeyDisabled.Load() }
+
+// SkipCredential は flagName の認証情報を無視するかを返す。
+func SkipCredential(flagName string) bool { return flagName == "api-key" && APIKeyDisabled() }

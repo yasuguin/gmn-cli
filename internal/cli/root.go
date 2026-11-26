@@ -38,6 +38,7 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
 	"github.com/google-gemini/gemini-api-cli/internal/interactive"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -102,7 +103,7 @@ func NewRootCommand() (*cobra.Command, error) {
 			output.InitAgentMode(cmd)
 			flagutil.SetStdinReadDeadline(output.IsAgentMode())
 			flagutil.ResetStdinSkip()
-			return nil
+			return backend.Apply(cmd) // plus: Agent Platform なら接続先と認証を切り替える
 		},
 	}
 	rootCmd.Flags().Bool("help-global", false, "Print global flags shared by every command")
@@ -203,6 +204,7 @@ func NewRootCommand() (*cobra.Command, error) {
 	_ = rootCmd.PersistentFlags().SetAnnotation("api-revision", "speakeasy:group", []string{"API Parameters"})
 	rootCmd.PersistentFlags().String("user-project", "", "Quota project header to send with Google GenAI API requests (env: GEMINI_USER_PROJECT)")
 	_ = rootCmd.PersistentFlags().SetAnnotation("user-project", "speakeasy:group", []string{"API Parameters"})
+	backend.RegisterFlags(rootCmd) // plus: --backend・--project・--location（fork のときだけ）
 
 	// Annotate persistent flags for grouped help display
 	for _, ga := range []struct{ flag, group string }{
