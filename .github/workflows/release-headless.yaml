@@ -45,12 +45,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
 
-      # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かない。タグの版に - があれば付け直す。
+      # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かない。版に - があれば付け直す。
+      # タグの接頭辞 headless-v 自体に - があるので、判定は接頭辞を外した版で行う（タグ全体で見ると正式版も prerelease になる）。
       - name: Mark GitHub Release as prerelease
-        if: contains(github.ref_name, '-')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release edit "$GITHUB_REF_NAME" --prerelease
+        run: |
+          version="${GITHUB_REF_NAME#headless-v}"
+          case "$version" in
+            *-*) gh release edit "$GITHUB_REF_NAME" --prerelease ;;
+            *) echo "正式版 ${version} なので prerelease にしない" ;;
+          esac
 
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

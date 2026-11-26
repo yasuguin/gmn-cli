@@ -62,8 +62,9 @@ homebrew_casks:
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Casks
-    # ctx.Semver が空なので auto は効かない。タグの版に - があるプレリリースは tap に出さない。
-    skip_upload: '{{ if contains .Tag "-" }}true{{ else }}false{{ end }}'
+    # ctx.Semver が空なので auto は効かない。版に - があるプレリリースは tap に出さない。
+    # タグの接頭辞 headless-v 自体に - があるので、判定は接頭辞を外した版で行う。
+    skip_upload: '{{ if contains (trimprefix .Tag "headless-v") "-" }}true{{ else }}false{{ end }}'
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
