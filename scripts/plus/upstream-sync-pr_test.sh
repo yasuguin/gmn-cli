@@ -24,7 +24,9 @@ cat >"$work/bin/gh" <<'GH'
 #!/usr/bin/env bash
 echo "$*" >>"$FAKE_GH_LOG"
 case "$1 $2" in
-"pr list") printf '%s\n' "${FAKE_GH_OPEN_PRS:-0}" ;;
+"pr list")
+  # --state all は同じ版の PR（閉じたものを含む）の数、それ以外は開いている取り込みの PR の head の一覧。
+  if [[ "$*" == *"--state all"* ]]; then printf '%s\n' "${FAKE_GH_ALL_PRS:-0}"; else printf '%s' "${FAKE_GH_OPEN_SYNC_HEADS:-}"; fi ;;
 "issue list") printf '%s\n' "${FAKE_GH_ISSUE_TITLES:-}" ;;
 esac
 exit 0
@@ -39,7 +41,11 @@ make_fixture() {
   local up="$dir/upstream"
   mkdir -p "$up"
   git -C "$up" init -q -b main
-  printf 'package main\n\nfunc main() {\n\trun()\n}\n' >"$up/cli.go"
+  if [[ "$kind" == gone ]]; then
+    printf 'package main\n\nfunc main() {\n\trun() // plus: fork の差し込み\n}\n' >"$up/cli.go"
+  else
+    printf 'package main\n\nfunc main() {\n\trun()\n}\n' >"$up/cli.go"
+  fi
   git -C "$up" add cli.go
   git -C "$up" commit -q -m "v0.4.0"
   git -C "$up" tag v0.4.0
@@ -51,10 +57,11 @@ make_fixture() {
   mkdir -p "$fork/scripts/plus"
   cp "$here/sync-upstream.sh" "$here/upstream-sync-pr.sh" "$fork/scripts/plus/"
   git -C "$fork" add -A
-  git -C "$fork" commit -q -m "fork の差し込み"
+  git -C "$fork" commit -q --allow-empty -m "fork の差し込み"
   git -C "$fork" push -q origin main
 
   case "$kind" in
+  gone) printf 'package main\n\nfunc main() {\n\trunAll()\n}\n' >"$up/cli.go"; git -C "$up" add cli.go ;;
   readme) echo "変更" >"$up/README.md"; git -C "$up" add README.md ;;
   conflict) printf 'package main\n\nfunc main() {\n\trunAll()\n}\n' >"$up/cli.go"; git -C "$up" add cli.go ;;
   esac
@@ -80,7 +87,7 @@ if [[ "$rc" == 0 ]] && git -C "$d/origin.git" rev-parse -q --verify refs/heads/u
   && grep -q '^pr create .*--head upstream-sync/v0.5.0' "$FAKE_GH_LOG" && ! grep -q '^issue create' "$FAKE_GH_LOG"; then
   ok "(a) 衝突しなければ取り込みのブランチを push して PR を作る"
 else
-  ng "(a) PR を作っていない（rc=$rc）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
+  ng "(a) PR を作っていない（rc=${rc}）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
 fi
 
 # (b) PR の題は conventional commit の形で、本家の版を含む。
@@ -98,7 +105,7 @@ if [[ "$rc" == 0 ]] && grep -q '^issue create .*--title upstream v0.5.0 を取�
   && ! git -C "$d/origin.git" rev-parse -q --verify refs/heads/upstream-sync/v0.5.0 >/dev/null; then
   ok "(c) 衝突したら PR を作らず issue を立てる"
 else
-  ng "(c) 衝突の扱いが違う（rc=$rc）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
+  ng "(c) 衝突の扱いが違う（rc=${rc}）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
 fi
 
 # (d) 衝突しても、同じ題の issue があれば立てない。
@@ -107,17 +114,49 @@ rc=$(FAKE_GH_ISSUE_TITLES="upstream v0.5.0 を取り込む" run_pr "$d" "$d/out"
 if [[ "$rc" == 0 ]] && ! grep -q '^issue create' "$FAKE_GH_LOG"; then
   ok "(d) 同じ版の issue があれば立てない"
 else
-  ng "(d) issue を二重に立てた（rc=$rc）: $(cat "$FAKE_GH_LOG")"
+  ng "(d) issue を二重に立てた（rc=${rc}）: $(cat "$FAKE_GH_LOG")"
 fi
 
-# (e) 同じ版の取り込みの PR が開いていれば、何もしない。
+# (e) 取り込みの PR が開いていれば（古い版のものでも）、新しく作らない。
 d="$work/e"; make_fixture "$d" readme
-rc=$(FAKE_GH_OPEN_PRS=1 run_pr "$d" "$d/out")
+rc=$(FAKE_GH_OPEN_SYNC_HEADS="upstream-sync/v0.4.9" run_pr "$d" "$d/out")
 if [[ "$rc" == 0 ]] && ! grep -q '^pr create' "$FAKE_GH_LOG" \
   && ! git -C "$d/origin.git" rev-parse -q --verify refs/heads/upstream-sync/v0.5.0 >/dev/null; then
-  ok "(e) 同じ版の PR が開いていれば何もしない"
+  ok "(e) 取り込みの PR が開いていれば（古い版でも）新しく作らない"
 else
-  ng "(e) PR を二重に作った（rc=$rc）: $(cat "$FAKE_GH_LOG")"
+  ng "(e) PR を二重に作った（rc=${rc}）: $(cat "$FAKE_GH_LOG")"
+fi
+
+# (e2) 同じ版の取り込みの PR が閉じられていれば（見送り）、作り直さない。
+d="$work/e2"; make_fixture "$d" readme
+rc=$(FAKE_GH_ALL_PRS=1 run_pr "$d" "$d/out")
+if [[ "$rc" == 0 ]] && ! grep -q '^pr create' "$FAKE_GH_LOG" \
+  && ! git -C "$d/origin.git" rev-parse -q --verify refs/heads/upstream-sync/v0.5.0 >/dev/null; then
+  ok "(e2) 同じ版の PR が閉じられていれば作り直さない"
+else
+  ng "(e2) 閉じた PR を作り直した（rc=${rc}）: $(cat "$FAKE_GH_LOG")"
+fi
+
+# (g) 衝突は無いが plus: の印が消える取り込みは、issue にし、ブランチを push せず、手元のブランチも残さない。
+d="$work/g"; make_fixture "$d" gone
+rc=$(run_pr "$d" "$d/out")
+if [[ "$rc" == 0 ]] && grep -q '^issue create' "$FAKE_GH_LOG" && ! grep -q '^pr create' "$FAKE_GH_LOG" \
+  && ! git -C "$d/origin.git" rev-parse -q --verify refs/heads/upstream-sync/v0.5.0 >/dev/null \
+  && ! git -C "$d/fork" rev-parse -q --verify refs/heads/upstream-sync/v0.5.0 >/dev/null; then
+  ok "(g) 印の欠落は issue にし、ブランチを push せず、手元のブランチも消す"
+else
+  ng "(g) 印の欠落の扱いが違う（rc=${rc}）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
+fi
+
+# (h) 衝突でも印の欠落でもない失敗（本家に無いタグの fetch など）は、issue にせず非 0 で終わる。
+d="$work/h"; make_fixture "$d" readme
+rc=0
+: >"$FAKE_GH_LOG"
+(cd "$d/fork" && PLUS_SYNC_UPSTREAM_URL="$d/upstream" bash scripts/plus/upstream-sync-pr.sh v9.9.9) >"$d/out" 2>&1 || rc=$?
+if [[ "$rc" != 0 ]] && ! grep -q 'create' "$FAKE_GH_LOG"; then
+  ok "(h) 衝突以外の失敗は issue にせず非 0 で終わる"
+else
+  ng "(h) 衝突以外の失敗の扱いが違う（rc=${rc}）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
 fi
 
 # (f) main に取り込み済みなら何もしない。
@@ -129,7 +168,7 @@ rc=$(run_pr "$d" "$d/out")
 if [[ "$rc" == 0 ]] && ! grep -q 'create' "$FAKE_GH_LOG" && grep -q '取り込み済み' "$d/out"; then
   ok "(f) 取り込み済みなら何もしない"
 else
-  ng "(f) 取り込み済みなのに動いた（rc=$rc）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
+  ng "(f) 取り込み済みなのに動いた（rc=${rc}）: $(cat "$d/out"; cat "$FAKE_GH_LOG")"
 fi
 
 echo "結果: ok $pass / FAIL $fail"

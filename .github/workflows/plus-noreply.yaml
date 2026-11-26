@@ -27,6 +27,13 @@ jobs:
             - name: Test the check
               run: bash scripts/plus/check-noreply_test.sh
 
+            # 本家の取り込みのスクリプトは週 1 回の workflow でしか動かないので、壊れても気づきにくい。
+            # ここで一緒にテストする（偽の本家 repo と偽の gh・go で完結し、数秒で終わる）。
+            - name: Test the upstream sync scripts
+              run: |
+                  bash scripts/plus/sync-upstream_test.sh
+                  bash scripts/plus/upstream-sync-pr_test.sh
+
             # 本家の commit は作者のアドレスを変えられないので対象外にする。本家の main とタグを refs/upstream/ に入れる。
             - name: Fetch upstream
               run: git fetch --no-tags "$UPSTREAM_URL" '+refs/heads/main:refs/upstream/main' '+refs/tags/*:refs/upstream/tags/*'

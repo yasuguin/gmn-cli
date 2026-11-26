@@ -4,9 +4,11 @@
 # rebase しない）。追うのは本家のリリースだけで、本家の main の未リリースの commit は追わない。
 #
 # - origin/main に取り込み済みなら何もしない
-# - 同じ版の取り込みの PR が開いていれば何もしない
+# - 取り込みの PR（upstream-sync/ のブランチ）が開いていれば、古い版のものでも新しく作らない（1 つずつ入れる）
+# - 同じ版の取り込みの PR が閉じられていれば（保守者が見送った）、作り直さない
 # - 衝突しなければ、取り込みのブランチ upstream-sync/<タグ> を origin に push し、PR を作る
-# - 衝突したら PR は作らず、issue を立てる（同じ題の issue が open/closed のどちらかにあれば立てない）
+# - 衝突か plus: の印の欠落なら PR は作らず、issue を立てる（同じ題の issue が open/closed のどちらかにあれば立てない）
+# - それ以外の失敗（fetch の失敗など）は issue にせず、非 0 で終わる（job の失敗として気づく）
 #
 # go build と go test は回さない（PR の CI に任せる）。gh と git push の認証は呼び出し側で用意する。
 #
@@ -41,11 +43,23 @@ if git merge-base --is-ancestor "${ref}^{commit}" refs/remotes/origin/main; then
 	exit 0
 fi
 
-open_prs=$(gh pr list --head "$branch" --state open --json number --jq length)
-if [[ "$open_prs" != 0 ]]; then
-	echo "本家 ${tag} の取り込みの PR が既に開いている。何もしない。"
+open_sync=$(gh pr list --state open --search "head:upstream-sync/" --json headRefName --jq '.[].headRefName' | grep '^upstream-sync/' || true)
+if [[ -n "$open_sync" ]]; then
+	echo "取り込みの PR が開いている（${open_sync//$'\n'/, }）。先にそれを入れる。何もしない。"
 	exit 0
 fi
+same_version=$(gh pr list --head "$branch" --state all --json number --jq length)
+if [[ "$same_version" != 0 ]]; then
+	echo "本家 ${tag} の取り込みの PR は閉じられている（見送り）。作り直さない。"
+	exit 0
+fi
+
+# 失敗したときに、手元の取り込みのブランチと途中の merge を残さない。
+cleanup_branch() {
+	git merge --abort 2>/dev/null || true
+	git switch -q --detach refs/remotes/origin/main
+	git branch -q -D "$branch" 2>/dev/null || true
+}
 
 git switch -q -C "$branch" refs/remotes/origin/main
 
@@ -64,9 +78,18 @@ BODY
 	exit 0
 fi
 
-# 衝突（または plus: の印の欠落）。merge を片付け、人が直せるよう issue にする。
-git merge --abort 2>/dev/null || true
-git switch -q --detach refs/remotes/origin/main
+# 衝突なら merge の途中（MERGE_HEAD あり）で止まる。印の欠落なら merge は commit 済みで、
+# HEAD の 2 つ目の親が本家のタグになる。どちらでもない失敗は issue にせず、job を失敗させる。
+if git rev-parse -q --verify MERGE_HEAD >/dev/null; then
+	reason="衝突"
+elif [[ "$(git rev-parse -q --verify HEAD^2 || true)" == "$(git rev-parse "${ref}^{commit}")" ]]; then
+	reason="plus: の印の欠落"
+else
+	cleanup_branch
+	echo "本家 ${tag} の取り込みが、衝突でも印の欠落でもない理由で失敗した。上の出力を確認する。" >&2
+	exit 1
+fi
+cleanup_branch
 title="upstream ${tag} を取り込む"
 existing=$(gh issue list --label "$LABEL" --state all --limit 1000 --json title --jq '.[].title')
 if printf '%s\n' "$existing" | grep -Fxq "$title"; then
@@ -75,7 +98,7 @@ if printf '%s\n' "$existing" | grep -Fxq "$title"; then
 fi
 gh label create "$LABEL" --color 0E8A16 --description "本家の新しいリリースの取り込み" --force >/dev/null
 body=$(cat <<BODY
-本家 google-gemini/gemini-api-cli の最新リリース ${tag} を自動で取り込めなかった（衝突、または plus: の印の欠落）。
+本家 google-gemini/gemini-api-cli の最新リリース ${tag} を自動で取り込めなかった（${reason}）。
 
 手元の clone で取り込んで直し、PR を出す:
 
