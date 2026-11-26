@@ -77,14 +77,50 @@ GIT_AUTHOR_NAME=a GIT_AUTHOR_EMAIL="$noreply" GIT_COMMITTER_NAME=c GIT_COMMITTER
   git merge -q --no-ff -m "chore(upstream): v9.9.9 を取り込む" upstream-work
 if run; then ok "(d) 本家の commit は対象外で、取り込みの merge commit だけを見る"; else ng "(d) 本家の commit で落ちた: $(cat "$work/out")"; fi
 
-# (e) 落ちたときに直し方を出す。
+# (d2) CI の置き場所（refs/upstream/ の下）から辿れる本家の commit も対象外。
 new_repo
+git switch -q -c upstream-work main
+commit "$other" "$other" "feat(cli): 本家の commit（CI の置き場所）"
+git update-ref refs/upstream/main HEAD
+git switch -q pr
+GIT_AUTHOR_NAME=a GIT_AUTHOR_EMAIL="$noreply" GIT_COMMITTER_NAME=c GIT_COMMITTER_EMAIL="$noreply" \
+  git merge -q --no-ff -m "chore(upstream): 本家を取り込む" upstream-work
+if run; then ok "(d2) refs/upstream/ から辿れる本家の commit も対象外"; else ng "(d2) refs/upstream/ の本家の commit で落ちた: $(cat "$work/out")"; fi
+
+# (e) 落ちたときに直し方を出す。付け直しの起点には、実際の base の SHA を出す。
+new_repo
+base_sha=$(git rev-parse main)
 commit "$other" "$other" "fix: noreply でない"
 run || true
-if grep -q "git config user.email" "$work/out" && grep -q "rebase" "$work/out"; then
-  ok "(e) 落ちたときに直し方（user.email の設定と rebase での付け直し）を出す"
+if grep -q "git config user.email" "$work/out" && grep -q "rebase" "$work/out" && grep -q "$base_sha" "$work/out"; then
+  ok "(e) 落ちたときに直し方（user.email の設定と、base の SHA を起点にした付け直し）を出す"
 else
-  ng "(e) 直し方が出ていない: $(cat "$work/out")"
+  ng "(e) 直し方か base の SHA が出ていない: $(cat "$work/out")"
+fi
+
+# (e2) 本家の取り込みを含む範囲では、rebase での付け直しではなく、取り込みのやり直しを案内する。
+new_repo
+git switch -q -c upstream-work main
+commit "$other" "$other" "feat(cli): 本家の commit"
+git update-ref refs/upstream/main HEAD
+git switch -q pr
+GIT_AUTHOR_NAME=a GIT_AUTHOR_EMAIL="$other" GIT_COMMITTER_NAME=c GIT_COMMITTER_EMAIL="$other" \
+  git merge -q --no-ff -m "chore(upstream): 本家を取り込む" upstream-work
+run || true
+if grep -q "sync-upstream.sh" "$work/out" && ! grep -q "rebase --exec" "$work/out"; then
+  ok "(e2) 取り込みの merge を含む範囲では、取り込みのやり直しを案内する"
+else
+  ng "(e2) 取り込みの範囲で rebase を案内している: $(cat "$work/out")"
+fi
+
+# (g) author と committer が両方 noreply でなければ、両方のアドレスを出す。
+new_repo
+commit "local-dev@example.com" "$other" "fix: 両方 noreply でない"
+run || true
+if grep -q "local-dev@example.com" "$work/out" && grep -q "$other" "$work/out"; then
+  ok "(g) author と committer の両方のアドレスを出す"
+else
+  ng "(g) 片方のアドレスしか出ていない: $(cat "$work/out")"
 fi
 
 # (f) 範囲が空なら通る。

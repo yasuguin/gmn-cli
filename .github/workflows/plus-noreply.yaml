@@ -6,6 +6,8 @@ name: noreply
 # 中身は一時 repo のテストと git log だけで、数秒で終わる。
 on:
     pull_request:
+        # edited: PR の base を変えたときに、範囲が変わるので検査し直す。
+        types: [opened, synchronize, reopened, edited]
 
 permissions:
     contents: read
@@ -29,8 +31,18 @@ jobs:
             - name: Fetch upstream
               run: git fetch --no-tags "$UPSTREAM_URL" '+refs/heads/main:refs/upstream/main' '+refs/tags/*:refs/upstream/tags/*'
 
+            # 判定には base 側の検査スクリプトを使う。PR 側のスクリプトだと、PR が自分を判定する検査を書き換えられるため。
+            # base にまだスクリプトが無いとき（スクリプトを入れる PR 自身）だけ、PR 側のものを使う。
             - name: Check commit addresses
               env:
                   BASE_SHA: ${{ github.event.pull_request.base.sha }}
                   HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-              run: bash scripts/plus/check-noreply.sh "$BASE_SHA" "$HEAD_SHA"
+              run: |
+                  checker="$RUNNER_TEMP/check-noreply.sh"
+                  if git cat-file -e "$BASE_SHA:scripts/plus/check-noreply.sh" 2>/dev/null; then
+                      git show "$BASE_SHA:scripts/plus/check-noreply.sh" >"$checker"
+                  else
+                      echo "::notice::base に検査スクリプトが無いので、PR 側のものを使う"
+                      cp scripts/plus/check-noreply.sh "$checker"
+                  fi
+                  bash "$checker" "$BASE_SHA" "$HEAD_SHA"
