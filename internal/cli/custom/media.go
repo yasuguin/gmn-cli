@@ -36,16 +36,18 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
 	"github.com/google-gemini/gemini-api-cli/internal/interactive"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
-	"github.com/google-gemini/gemini-api-cli/internal/plus"          // plus: gs:// の入力と案内（media_plus.go）
-	"github.com/google-gemini/gemini-api-cli/internal/plus/gcsinput" // plus: 同上
-	"github.com/google-gemini/gemini-api-cli/internal/sdk"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/genai"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/interactions"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/operations"
+	"github.com/google-gemini/gemini-api-cli/internal/sdk"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/sdkinternal/hooks"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	// plus: gs:// の入力と案内（media_plus.go）。本家の import 行の並びを変えないよう別の塊に置く。
+	"github.com/google-gemini/gemini-api-cli/internal/plus"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/gcsinput"
 )
 
 // maxInlineRequestBytes is the CLI's conservative budget for one interaction
