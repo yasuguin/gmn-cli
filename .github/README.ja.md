@@ -2,9 +2,9 @@
 
 [English](README.md)
 
-エージェント、スクリプト、CI 向けのヘッドレス Gemini CLI です。Agent Platform にも対応した非公式の fork です（[google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli)）。Google とは関係ありません。
+エージェント、スクリプト、CI から Gemini のモデルを呼ぶための、ヘッドレスな CLI です。Agent Platform にも対応した非公式の fork です（[google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli)）。Google とは関係ありません。
 
-対話型の Gemini CLI エージェントではなく、シェルから呼び出すワンショットのコマンドです。
+対話型の Gemini CLI エージェントではなく、Gemini CLI の headless mode を包むものでもありません。シェルから呼び出すワンショットのコマンドで、自分でファイルを編集したりツールを実行したりはせず、Gemini のモデルにリクエストを 1 回送って結果を返します。
 
 コマンド名は `gemini-headless` で、upstream の `gemini-api` コマンドと競合せず併用できます。基本的な使い方は [upstream の README](https://github.com/google-gemini/gemini-api-cli#readme) を参照してください。この README では、本 fork で追加された点のみを説明します。
 

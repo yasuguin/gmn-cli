@@ -2,9 +2,9 @@
 
 [日本語](README.ja.md)
 
-Headless Gemini CLI for agents, scripts, and CI — an unofficial fork of [google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli) that also targets Agent Platform. Not affiliated with Google.
+A headless CLI for Gemini models, for agents, scripts, and CI — an unofficial fork of [google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli) that also targets Agent Platform. Not affiliated with Google.
 
-This is a one-shot command you call from a shell, not the interactive Gemini CLI agent.
+This is a one-shot command you call from a shell, not the interactive Gemini CLI agent, and not a wrapper around Gemini CLI's headless mode. It does not edit files or run tools on its own; it sends one request to a Gemini model and returns the result.
 
 The command is `gemini-headless`. It runs next to the upstream `gemini-api` command without conflict. Upstream usage is documented in the [upstream README](https://github.com/google-gemini/gemini-api-cli#readme). This README covers only what the fork adds.
 
