@@ -19,6 +19,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/google-gemini/gemini-api-cli/internal/plus"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/sdkinternal/config"
 )
 
@@ -26,7 +27,8 @@ import (
 // client convention: {product}/{version} gl-{lang}/{runtime},
 // e.g. "google-genai-cli/0.5.4 gl-go/go1.24.0".
 func UserAgent(version string) string {
-	return fmt.Sprintf("google-genai-cli/%s gl-go/%s", strings.TrimSpace(version), runtime.Version())
+	ua := fmt.Sprintf("google-genai-cli/%s gl-go/%s", strings.TrimSpace(version), runtime.Version())
+	return plus.UserAgent(ua) // plus: fork では先頭に fork 名と版を足す
 }
 
 // userAgentHook rewrites the default Speakeasy User-Agent into the
