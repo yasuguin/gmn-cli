@@ -1,0 +1,19 @@
+# GitHub のリリースノートの生成の分類（release-please の changelog-type: github が使う）。
+# ラベルは PR の題から自動で付く（.github/workflows/plus-changelog-label.yaml、scripts/plus/changelog-label.sh）。
+# 利用者に関係しない PR（ci・docs・リリース PR など）は changelog: skip で外す。
+changelog:
+  exclude:
+    labels:
+      - "changelog: skip"
+      - "autorelease: pending"
+      - "autorelease: tagged"
+  categories:
+    - title: 機能
+      labels:
+        - "changelog: feat"
+    - title: 修正
+      labels:
+        - "changelog: fix"
+    - title: 本家の取り込み
+      labels:
+        - "changelog: upstream"
