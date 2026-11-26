@@ -54,6 +54,17 @@ homebrew_casks:
       - gemini-headless
     binaries:
       - gemini-headless
+    # バイナリは Apple の公証を受けていない（ad-hoc 署名だけ）。brew が付ける com.apple.quarantine が残ると
+    # Gatekeeper が「開いていません」と出して起動を拒否するので、入れた後に外す。
+    # 公証すれば要らなくなるが、Apple Developer Program が要るので今は選ばない（#19）。
+    # --no-quarantine などで属性が無いと xattr -d は失敗するので、失敗しても install は止めない。
+    # install_steps は Homebrew の postflight_steps になり、chdir の "." は staged path を指す。
+    hooks:
+      post:
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-d", "com.apple.quarantine", "gemini-headless"], chdir: ".", must_succeed: false
+          end
     homepage: https://github.com/yasuguin/gemini-headless-cli
     description: "Unofficial fork of google-gemini/gemini-api-cli (Gemini API and Agent Platform). Not affiliated with Google."
     repository:
