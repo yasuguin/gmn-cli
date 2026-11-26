@@ -57,7 +57,9 @@ echo "ok: checksum 一致で入る・gemini-api を上書きしない"
 bad_dir="$work/bin-bad"
 official_bin_setup "$bad_dir"
 cp "$release_dir/checksums.txt" "$work/checksums.good"
-sed 's/^[0-9a-f]/0/' "$work/checksums.good" >"$release_dir/checksums.txt"
+# 先頭の 1 文字を必ず別の文字に変える。tar に時刻が入りハッシュは毎回変わるので、
+# 固定の文字に置き換えると、先頭が同じ文字のときに不一致にならない。
+awk '{ c = substr($1, 1, 1); n = (c == "0") ? "1" : "0"; print n substr($0, 2) }' "$work/checksums.good" >"$release_dir/checksums.txt"
 if run_installer "$bad_dir"; then
   cp "$work/checksums.good" "$release_dir/checksums.txt"
   fail "checksum 不一致なのに成功した"
