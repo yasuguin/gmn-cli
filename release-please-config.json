@@ -12,8 +12,7 @@
     ".": {
       "component": "gmn",
       "package-name": "gmn-cli",
-      "changelog-path": "CHANGELOG.md",
-      "release-as": "0.1.2-rc.2"
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }
