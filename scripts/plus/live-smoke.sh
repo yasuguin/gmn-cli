@@ -96,9 +96,14 @@ if ! (cd "$root" && go build -o "$bin" ./cmd/gmn) >"$logdir/build.log" 2>&1; the
   exit 1
 fi
 
-# HOME を一時ディレクトリへ向けて repo の設定や実ホームの config を読ませない。gcloud の設定だけは
-# 実ホームを指し続けないと ADC が見つからないので CLOUDSDK_CONFIG で渡す。
+# HOME を一時ディレクトリへ向けて repo の設定や実ホームの config を読ませない。
+# golang.org/x/oauth2/google は Unix で ADC を $HOME/.config/gcloud からしか探さず、CLOUDSDK_CONFIG を見ない。
+# そのため GOOGLE_APPLICATION_CREDENTIALS が無いときは、HOME を替える前に実ホームの ADC ファイルをそれで渡す。
 export CLOUDSDK_CONFIG="${CLOUDSDK_CONFIG:-$real_home/.config/gcloud}"
+adc_file="$CLOUDSDK_CONFIG/application_default_credentials.json"
+if [ -z "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] && [ -f "$adc_file" ]; then
+  export GOOGLE_APPLICATION_CREDENTIALS="$adc_file"
+fi
 export HOME="$work/home"
 mkdir -p "$HOME"
 unset GEMINI_API_KEY GOOGLE_API_KEY GEMINI_ACCESS_TOKEN
