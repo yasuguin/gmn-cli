@@ -3,7 +3,8 @@
 # タグは headless-v0.1.0 形式。GoReleaser OSS は monorepo.tag_prefix（Pro 限定）を使えない。
 # 版は .Tag から "headless-v" を trimprefix で外して得る（ldflags の plus.Version）。
 # 現在のタグを semver として解析する検査は --skip=validate でだけ外せる（release workflow と snapshot が付ける）。
-# そのため ctx.Semver は空になり、release の prerelease: auto は常に正式版扱いになる。
+# そのため ctx.Semver は空になり、prerelease: auto・skip_upload: auto は常に正式版扱いになる。
+# prerelease は release workflow が gh release edit で付け、cask は skip_upload のテンプレートで判定する。
 version: 2
 
 project_name: gemini-headless-cli
@@ -61,6 +62,8 @@ homebrew_casks:
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Casks
+    # ctx.Semver が空なので auto は効かない。タグの版に - があるプレリリースは tap に出さない。
+    skip_upload: '{{ if contains .Tag "-" }}true{{ else }}false{{ end }}'
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com

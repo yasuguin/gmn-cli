@@ -45,6 +45,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
 
+      # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かない。タグの版に - があれば付け直す。
+      - name: Mark GitHub Release as prerelease
+        if: contains(github.ref_name, '-')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "$GITHUB_REF_NAME" --prerelease
+
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -79,6 +86,9 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
 
+      - name: Test wheel builder
+        run: python3 -m unittest discover -s packaging/pypi/tests
+
       - name: Build wheels
         env:
           PLUS_VERSION: ${{ github.ref_name }}
@@ -107,6 +117,8 @@ jobs:
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           packages-dir: ${{ runner.temp }}/wheels/
+          # 途中で失敗した再実行で、公開済みの wheel があっても止まらないようにする。
+          skip-existing: true
 
   npm:
     needs: goreleaser
@@ -175,11 +187,19 @@ jobs:
       # npm は公開前のパッケージに trusted publisher を設定できないので、初回だけ secret NPM_TOKEN
       # （期限の短い granular トークン）で公開する。初回の後に trusted publisher を設定し、secret は消す。
       # secret が無ければ OIDC（trusted publishing）で公開する。
+      # プレリリースの版（- を含む）は dist-tag を next にし、latest を動かさない。
+      # 途中で失敗した再実行に備え、公開済みの版は飛ばす（同じ版の再公開は npm が拒否するため）。
       - name: Publish to npm
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PLUS_VERSION: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          version="${PLUS_VERSION#headless-v}"
+          case "$version" in
+            *-*) dist_tag=next ;;
+            *) dist_tag=latest ;;
+          esac
           if [ -n "${NPM_TOKEN:-}" ]; then
             echo "::warning::NPM_TOKEN で公開する（初回だけの想定。公開後に trusted publisher を設定して secret を消す）"
             # トークンは一時ファイルの .npmrc にだけ置き、npm にはそのファイルを読ませる。
@@ -192,5 +212,9 @@ jobs:
             gemini-headless-cli-linux-arm64 gemini-headless-cli-linux-x64 \
             gemini-headless-cli-win32-arm64 gemini-headless-cli-win32-x64 \
             gemini-headless-cli; do
-            npm publish "${{ runner.temp }}/npm/$pkg" --provenance --access public
+            if [ "$(npm view "${pkg}@${version}" version 2>/dev/null || true)" = "$version" ]; then
+              echo "${pkg}@${version} は公開済みなので飛ばす"
+              continue
+            fi
+            npm publish "${{ runner.temp }}/npm/$pkg" --provenance --access public --tag "$dist_tag"
           done
