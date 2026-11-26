@@ -11,6 +11,7 @@ pyproject と setuptools を使わないのは、ファイルごとに platform 
 import argparse
 import base64
 import hashlib
+import re
 import sys
 import tarfile
 import zipfile
@@ -34,6 +35,25 @@ PLATFORMS = {
     "Windows_x86_64": ("gemini-headless.exe", "win_amd64"),
     "Windows_arm64": ("gemini-headless.exe", "win_arm64"),
 }
+
+
+_SEMVER = re.compile(r"^(\d+\.\d+\.\d+)(?:-(alpha|a|beta|b|rc)[.-]?(\d+))?$")
+_PRE_TAG = {"alpha": "a", "a": "a", "beta": "b", "b": "b", "rc": "rc"}
+
+
+def normalize_version(version: str) -> str:
+    """タグ由来の semver を PEP 440 にする（0.1.0-rc.1 → 0.1.0rc1）。
+
+    wheel 名・dist-info・METADATA に生の semver を入れると PyPI に拒否されるか、
+    ファイル名と METADATA の版が食い違う。PEP 440 にできない版は、ビルドの前に止める。
+    """
+    m = _SEMVER.match(version)
+    if not m:
+        raise SystemExit(
+            f"版 {version!r} を PEP 440 にできない（例: 0.1.0・0.1.0-rc.1・0.1.0-beta.2）"
+        )
+    base, tag, num = m.groups()
+    return base if tag is None else f"{base}{_PRE_TAG[tag]}{num}"
 
 
 def archive_path(dist: Path, key: str) -> Path:
@@ -150,12 +170,13 @@ def main() -> None:
     parser.add_argument("--readme", type=Path, default=HERE / "README.md")
     args = parser.parse_args()
 
+    version = normalize_version(args.version)
     args.out.mkdir(parents=True, exist_ok=True)
     license_text = args.license.read_bytes()
     readme = args.readme.read_text(encoding="utf-8")
 
     built = [
-        build_one(key, args.dist, args.out, args.version, license_text, readme)
+        build_one(key, args.dist, args.out, version, license_text, readme)
         for key in PLATFORMS
     ]
     for path in built:
