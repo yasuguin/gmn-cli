@@ -1,7 +1,7 @@
 name: Release plus
 
 # plus-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
-# npm・PyPI の公開は後の ticket で job を足す（ここでは contents: write のみ）。
+# GitHub Releases は goreleaser job、PyPI は pypi job。npm は別 ticket。
 on:
   push:
     tags:
@@ -54,3 +54,56 @@ jobs:
             dist/
             !dist/*.txt
           retention-days: 30
+
+  pypi:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    # trusted publishing の対象。environment `pypi` は GitHub の Settings で作る（保守者が手で行う）。
+    environment:
+      name: pypi
+      url: https://pypi.org/project/gemini-api-cli-plus/
+    permissions:
+      # PyPI の trusted publishing（OIDC）に必要。API token は使わない。
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download goreleaser artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-plus-artifacts
+          path: ${{ runner.temp }}/dist
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+
+      - name: Build wheels
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#plus-v}"
+          uv run --no-project packaging/pypi/build_wheels.py \
+            --dist "${{ runner.temp }}/dist" \
+            --out "${{ runner.temp }}/wheels" \
+            --version "$version"
+
+      # 6 種のうち Linux x86_64 を実際に入れて動かし、版が tag と一致することを確かめてから公開する。
+      - name: Smoke test wheel
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#plus-v}"
+          wheel=$(ls "${{ runner.temp }}"/wheels/*manylinux_2_17_x86_64*.whl)
+          out=$(uvx --from "$wheel" gemini-api-cli-plus --version | head -n 1)
+          echo "$out"
+          case "$out" in
+            "gemini-api-plus ${version} "*) ;;
+            *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
+          esac
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: ${{ runner.temp }}/wheels/
