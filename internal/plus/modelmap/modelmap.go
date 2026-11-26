@@ -71,10 +71,11 @@ var table = map[string]Entry{
 	"gemini-2.5-flash-image":  {Status: GenerateContent},
 	"nano-banana-pro-preview": {Status: Unsupported, Alternatives: []string{"gemini-3-pro-image"}},
 
-	// tts は generateContent での扱いを #12 で確かめる。
+	// tts は generateContent で通った（実測 2026-11-26）。
 	"gemini-3.8-flash-tts":         {Status: GenerateContent},
 	"gemini-3.8-flash-lite-tts":    {Status: GenerateContent},
 	"gemini-3.1-flash-tts-preview": {Status: GenerateContent},
+	"gemini-2.5-flash-preview-tts": {Status: GenerateContent},
 }
 
 // Lookup は共通名のモデルの扱いを返す。表に無ければ Unverified。

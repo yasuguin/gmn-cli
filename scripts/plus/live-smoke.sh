@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Agent Platform へ実際に送る smoke スクリプト。保守者が手元で回す（CI には置かない）。
-# 主要コマンドを 1 本ずつ実行し、チェックごとに PASS・FAIL・SKIP・INFO を 1 行で出して最後に集計する。
+# 主要コマンドを 1 本ずつ実行し、チェックごとに PASS・FAIL・SKIP を 1 行で出して最後に集計する。
 # 個々の失敗で止まらず最後まで回す。ログ全文は一時ディレクトリに残す。
 #
 # 費用の目安: --probe-models を付けない通常実行は数回の呼び出しだけ。--probe-models はテキスト 10 回・画像 5 回・
@@ -37,8 +37,8 @@ Agent Platform へ実際に送る smoke スクリプト（保守者が手元で�
   通常実行は数回の呼び出し。--probe-models は テキスト 10 回・画像 5 回・TTS 4 回で数十円〜百円程度の見込み（料金表は未確認）。
 
 出力:
-  PASS|FAIL|SKIP|INFO <name> exit=<code> <要点>。最後に件数を集計し、ログの場所を出す。
-  FAIL が 1 つでもあると終了コードは 1。INFO（tts）は結果を記録するだけで失敗にしない。
+  PASS|FAIL|SKIP <name> exit=<code> <要点>。最後に件数を集計し、ログの場所を出す。
+  FAIL が 1 つでもあると終了コードは 1。
 EOF
 }
 
@@ -151,7 +151,6 @@ fi
 pass=0
 fail=0
 skip=0
-info=0
 seq=0
 LAST_OUT=""
 
@@ -203,24 +202,6 @@ run_check() {
   fi
 }
 
-# info_check NAME 引数...。結果を記録するだけで、失敗にはしない（tts は #12 の未実装が想定）。
-info_check() {
-  local name="$1"
-  shift
-  seq=$((seq + 1))
-  local base
-  base="$(printf '%s/%02d-%s' "$logdir" "$seq" "$name")"
-  "$bin" "$@" "${common[@]}" >"$base.out" 2>"$base.err"
-  local rc=$?
-  mask_file "$base.out"
-  mask_file "$base.err"
-  info=$((info + 1))
-  local point
-  point="$(first_line "$base.err")"
-  [ -z "$point" ] && point="$(first_line "$base.out")"
-  printf 'INFO %s exit=%s %s\n' "$name" "$rc" "$(clip "$(mask_text "$point")")"
-}
-
 # file_check NAME PATH。直前のコマンドが書き出したファイルが空でなく存在することを PASS・FAIL にする。
 file_check() {
   if [ "$dry" = 1 ] || [ -s "$2" ]; then
@@ -229,6 +210,17 @@ file_check() {
   else
     fail=$((fail + 1))
     printf 'FAIL %s exit=- 画像ファイルが書き出されていない: %s\n' "$1" "$(basename "$2")"
+  fi
+}
+
+# wav_check NAME PATH。書き出したファイルが WAV（先頭が RIFF）であることを PASS・FAIL にする。
+wav_check() {
+  if [ "$dry" = 1 ] || [ "$(head -c 4 "$2" 2>/dev/null)" = RIFF ]; then
+    pass=$((pass + 1))
+    printf 'PASS %s exit=- %s\n' "$1" "$(clip "$(basename "$2")")"
+  else
+    fail=$((fail + 1))
+    printf 'FAIL %s exit=- WAV として書き出されていない: %s\n' "$1" "$(basename "$2")"
   fi
 }
 
@@ -304,10 +296,11 @@ else
 fi
 
 # image は generateContent で呼び、最終画像（thought でないもの）が書き出されることまで確かめる。
-# tts は #12 で実装する。今は失敗が想定なので INFO として結果だけ残す。
+# tts も generateContent で呼び、書き出した WAV の先頭が RIFF であることまで確かめる。
 run_check image 0 '' image "a small red apple on white background" --out "$out_dir/image.png"
 file_check image-file "$out_dir/image.png"
-info_check tts tts "Hello from Agent Platform" --out "$out_dir/tts.wav"
+run_check tts 0 '' tts "Hello from Agent Platform" --out "$out_dir/tts.wav"
+wav_check tts-file "$out_dir/tts.wav"
 
 probe_text_models=(gemini-2.5-flash gemini-2.5-pro gemini-3.5-flash gemini-3.7-flash gemini-4-argon gemini-4-carbon gemini-4-neon gemini-flash-latest gemini-pro-latest gemma-4-31b-it)
 probe_image_models=(gemini-nano-banana-2.1 gemini-3.1-flash-image gemini-3-pro-image gemini-2.5-flash-image nano-banana-pro-preview)
@@ -431,7 +424,7 @@ if [ "$probe" = 1 ]; then
   echo "probe の要約: $summary"
 fi
 
-echo "集計: PASS=$pass FAIL=$fail SKIP=$skip INFO=$info"
+echo "集計: PASS=$pass FAIL=$fail SKIP=$skip"
 echo "ログ: $work"
 if [ "$fail" -gt 0 ]; then
   exit 1
