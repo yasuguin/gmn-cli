@@ -1,4 +1,4 @@
-name: Release plus
+name: Release gemini-headless-cli
 
 # headless-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
 # GitHub Releases は goreleaser job、PyPI は pypi job、npm は npm job。
@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: release-plus-artifacts
+          name: release-headless-artifacts
           path: |
             dist/
             !dist/*.txt
@@ -73,7 +73,7 @@ jobs:
       - name: Download goreleaser artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: release-plus-artifacts
+          name: release-headless-artifacts
           path: ${{ runner.temp }}/dist
 
       - name: Setup uv
@@ -127,7 +127,7 @@ jobs:
       - name: Download goreleaser artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: release-plus-artifacts
+          name: release-headless-artifacts
           path: ${{ runner.temp }}/dist
 
       # npm の trusted publishing は npm CLI 11.5.1 以上が必要（https://docs.npmjs.com/trusted-publishers）。

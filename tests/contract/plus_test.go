@@ -85,7 +85,7 @@ func allCommandPaths(c *cobra.Command, prefix []string, out *[][]string) {
 	}
 }
 
-func TestPlusバイナリ名がgemini_api_plusでhelpが動く(t *testing.T) {
+func TestPlusバイナリ名がgemini_headlessでhelpが動く(t *testing.T) {
 	bin := buildPlusBinary(t)
 	if filepath.Base(bin) != "gemini-headless" {
 		t.Fatalf("実行ファイル名 = %q", filepath.Base(bin))
@@ -126,7 +126,7 @@ func TestPlus全コマンドのhelpとusageに本家のコマンド名が出な�
 	assertNoUpstreamName(t, "--help-global", helpGlobal.stdout)
 }
 
-func TestPlusエラーの案内もgemini_api_plus(t *testing.T) {
+func TestPlusエラーの案内もgemini_headless(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
@@ -168,7 +168,7 @@ func TestPlusエラーの案内もgemini_api_plus(t *testing.T) {
 	})
 }
 
-func TestPlus設定ファイルはgemini_api_plus用で公式の設定を読まない(t *testing.T) {
+func TestPlus設定ファイルはgemini_headless用で公式の設定を読まない(t *testing.T) {
 	var gotKeys []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotKeys = append(gotKeys, r.Header.Get("x-goog-api-key"))

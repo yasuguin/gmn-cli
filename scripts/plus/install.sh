@@ -22,16 +22,16 @@ BINARY_NAME="gemini-headless"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="$HOME/.local/bin"
 VERSION="${GEMINI_VERSION:-latest}"
-# GEMINI_PLUS_DOWNLOAD_BASE と GEMINI_PLUS_PLATFORM は scripts/plus/install_test.sh が
+# GEMINI_HEADLESS_DOWNLOAD_BASE と GEMINI_HEADLESS_PLATFORM は scripts/plus/install_test.sh が
 # ローカルの fixture を指すために使う。通常の利用では設定しない（既定は uname から決める）。
-DOWNLOAD_BASE="${GEMINI_PLUS_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
+DOWNLOAD_BASE="${GEMINI_HEADLESS_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
 
 log_info() { echo "[INFO] $1"; }
 log_error() { echo "[ERROR] $1" >&2; }
 
 detect_platform() {
-  if [ -n "${GEMINI_PLUS_PLATFORM:-}" ]; then
-    echo "$GEMINI_PLUS_PLATFORM"
+  if [ -n "${GEMINI_HEADLESS_PLATFORM:-}" ]; then
+    echo "$GEMINI_HEADLESS_PLATFORM"
     return
   fi
   local os arch

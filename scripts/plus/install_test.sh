@@ -36,8 +36,8 @@ run_installer() {
   local install_dir="$1"
   GEMINI_VERSION="$version" \
     GEMINI_INSTALL_DIR="$install_dir" \
-    GEMINI_PLUS_PLATFORM="$platform" \
-    GEMINI_PLUS_DOWNLOAD_BASE="file://$work/release" \
+    GEMINI_HEADLESS_PLATFORM="$platform" \
+    GEMINI_HEADLESS_DOWNLOAD_BASE="file://$work/release" \
     bash "$installer" >"$install_dir.log" 2>&1
 }
 
