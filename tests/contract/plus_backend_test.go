@@ -216,38 +216,6 @@ func TestPlusBackend不正なbackendは終了コード2(t *testing.T) {
 	}
 }
 
-func TestPlusBackendRawHTTP経路も同じ接続先と認証になる(t *testing.T) {
-	// files upload は generated ではない自前の HTTP 経路（custom/rawhttp）を使う。
-	// Agent Platform に Files API は無いので、ここで固定するのはホスト・認証・project ヘッダだけ（パスは #7 の対象）。
-	file := filepath.Join(t.TempDir(), "f.txt")
-	if err := os.WriteFile(file, []byte("hi"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	result := runPlus(t, t.TempDir(), map[string]string{"GEMINI_API_KEY": "SECRETKEY"},
-		"--no-interactive", "--no-keyring", "--dry-run", "-o", "json",
-		"--backend", "vertex", "--project", "my-proj", "--location", "asia-northeast1", "--access-token", "t",
-		"files", "upload", file)
-	if result.err != nil {
-		t.Fatalf("files upload --dry-run failed: %v\n%s", result.err, result.stderr)
-	}
-	first, _, _ := strings.Cut(result.stdout, "\n")
-	var parsed struct {
-		Request struct {
-			URL     string              `json:"url"`
-			Headers map[string][]string `json:"headers"`
-		} `json:"request"`
-	}
-	if err := json.Unmarshal([]byte(first), &parsed); err != nil {
-		t.Fatalf("dry-run の出力が JSON ではない: %v\n%s", err, result.stdout)
-	}
-	if !strings.HasPrefix(parsed.Request.URL, "https://asia-northeast1-aiplatform.googleapis.com/v1beta1/projects/my-proj/locations/") {
-		t.Errorf("接続先が Agent Platform ではない: %s", parsed.Request.URL)
-	}
-	if len(parsed.Request.Headers["Authorization"]) == 0 || len(parsed.Request.Headers["X-Goog-Api-Key"]) != 0 || len(parsed.Request.Headers["X-Goog-User-Project"]) == 0 {
-		t.Errorf("headers = %v", parsed.Request.Headers)
-	}
-}
-
 func TestPlusWhoamiがbackendとprojectとlocationを表示する(t *testing.T) {
 	result := runPlus(t, t.TempDir(), map[string]string{"GOOGLE_CLOUD_PROJECT": "env-proj"},
 		"--no-interactive", "--no-keyring", "--backend", "vertex", "whoami")

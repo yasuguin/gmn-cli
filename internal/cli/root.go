@@ -39,6 +39,8 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/interactive"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
 	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/capability"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/guidance"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -103,6 +105,9 @@ func NewRootCommand() (*cobra.Command, error) {
 			output.InitAgentMode(cmd)
 			flagutil.SetStdinReadDeadline(output.IsAgentMode())
 			flagutil.ResetStdinSkip()
+			if err := capability.Guard(cmd); err != nil { // plus: Agent Platform で使えないコマンドを通信前に止める
+				return err
+			}
 			return backend.Apply(cmd) // plus: Agent Platform なら接続先と認証を切り替える
 		},
 	}
@@ -680,7 +685,7 @@ func compactRootHelpFooter(cmd *cobra.Command) string {
 	}
 	lines = append(lines, "Globals (auth, network, output): "+rootName+" --help-global")
 	lines = append(lines, "Setup: export GEMINI_API_KEY=...   or   "+rootName+" configure")
-	return strings.Join(lines, string(rune(10)))
+	return guidance.Docs(cmd, strings.Join(lines, string(rune(10)))) // plus: Agent Platform では API key の案内を ADC の案内に替える
 }
 
 // groupedUsageTemplate returns Cobra's default usage template with the local
