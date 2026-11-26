@@ -96,7 +96,7 @@ API キーは Agent Platform には送信されません。
 ## モデル名
 
 - 両方のバックエンドで同じモデル名を使用します。
-- `--model` 未指定時、デフォルトモデルが Agent Platform で提供されていない場合は別モデルに置き換えられ、その旨が標準エラー出力（stderr）に表示されます。たとえば `transcribe` では `gemini-3.5-transcribe` の代わりに `gemini-3.8-flash` が使われます。
+- `--model` 未指定時、デフォルトモデルが Agent Platform で提供されていない場合は別モデルに置き換えられ、その旨が標準エラー出力（stderr）に表示されます（`-o json` と `--agent-mode` では表示されません）。たとえば `transcribe` では `gemini-3.5-transcribe` の代わりに `gemini-3.8-flash` が使われます。
 - Agent Platform で提供されていないモデルを `--model` で明示的に指定した場合、コマンドは停止し、代替モデルの一覧を表示します。コストや品質の変化に気づけるよう、暗黙的なモデルの切り替えは行いません。
 - Agent Platform で動作確認済み（2026-11-26）: `gemini-4-hydrogen`（デフォルト）, `gemini-4-argon`, `gemini-4-carbon`, `gemini-4-neon`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash`
 - 未提供: `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-flash-latest`, `gemini-pro-latest`, `gemma-4-31b-it`

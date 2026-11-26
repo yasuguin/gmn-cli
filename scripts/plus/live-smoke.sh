@@ -255,8 +255,8 @@ else
 fi
 
 if [ -n "$wav" ]; then
-  # 既定モデルは modelmap の読み替えで gemini-3.8-flash になり、その旨が stderr に出る。
-  run_check transcribe-default 0 'gemini-3.8-flash' transcribe -i "$wav" --out "$out_dir/transcript.md"
+  # 既定モデルは modelmap の読み替えで gemini-3.8-flash になり、その旨が stderr に出る（-o json・--agent-mode では出ない）。
+  run_check transcribe-default 0 'Using gemini-3.8-flash: gemini-3.5-transcribe is not available on Agent Platform' transcribe -i "$wav" --out "$out_dir/transcript.md"
   run_check transcribe-unsupported-model 2 'not available' transcribe -i "$wav" --model gemini-3.5-transcribe
 else
   skip_check transcribe-default "wav の素材が作れない（say が無い）"

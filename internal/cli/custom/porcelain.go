@@ -200,7 +200,11 @@ func modelFlag(cmd *cobra.Command, def, route string) {
 func resolveModel(cmd *cobra.Command, def string) (string, error) {
 	model, _ := flagutil.GetStringFlag(cmd, "model")
 	if strings.TrimSpace(model) == "" {
-		model = modelmap.ResolveDefault(cmd, def) // plus: 既定が Agent Platform に無ければ代わりのモデルにする
+		var notice string
+		model, notice = modelmap.ResolveDefault(cmd, def) // plus: 既定が Agent Platform に無ければ代わりのモデルにする
+		if notice != "" {                                 // plus: 読み替えの案内は progress の門を通す
+			progress(cmd, "%s", notice)
+		}
 	}
 	id, err := normalizeModelPositional(model)
 	if err != nil {

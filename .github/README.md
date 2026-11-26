@@ -96,7 +96,7 @@ Verified with the maintainer's smoke script on 2026-11-26 against the `global` l
 ## Model names
 
 - Use the same model names on both backends.
-- With no `--model`, a default that Agent Platform does not serve is replaced, and the replacement is printed to stderr. For example, `transcribe` uses `gemini-3.8-flash` instead of `gemini-3.5-transcribe`.
+- With no `--model`, a default that Agent Platform does not serve is replaced, and the replacement is printed to stderr (not with `-o json` or `--agent-mode`). For example, `transcribe` uses `gemini-3.8-flash` instead of `gemini-3.5-transcribe`.
 - With an explicit `--model` that Agent Platform does not serve, the command stops and lists alternatives. It does not switch models silently, so a change in cost or quality is visible.
 - Verified on Agent Platform (2026-11-26): `gemini-4-hydrogen` (default), `gemini-4-argon`, `gemini-4-carbon`, `gemini-4-neon`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash`.
 - Not served: `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-flash-latest`, `gemini-pro-latest`, `gemma-4-31b-it`.

@@ -53,7 +53,7 @@ Do not switch to an API key to get past an Agent Platform error. The CLI does no
 ## 3. Model names
 
 - Use the same model names on both backends.
-- If you do not pass `--model`, and the default is not served on Agent Platform, the CLI uses a replacement and prints the name it used to stderr. Example: `transcribe` uses `gemini-3.8-flash` on Agent Platform instead of `gemini-3.5-transcribe`.
+- If you do not pass `--model`, and the default is not served on Agent Platform, the CLI uses a replacement and prints a notice (`Using <replacement>: <default> is not available on Agent Platform`) to stderr, except with `-o json` or `--agent-mode`. Example: `transcribe` uses `gemini-3.8-flash` on Agent Platform instead of `gemini-3.5-transcribe`.
 - If you pass `--model` explicitly and Agent Platform does not serve it, the CLI stops with a list of alternatives. It does not switch models silently. Pick one of the listed names and pass it again.
 - `gemini-headless models` prints the offline catalog with the Agent Platform status of each model. `gemini-headless models list` and `models get` query the live API.
 

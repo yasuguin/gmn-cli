@@ -1,7 +1,6 @@
 package contract_test
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,25 +15,59 @@ func modelOf(t *testing.T, stub *interactionStub) any {
 	return stub.requestBody(t)["model"]
 }
 
-func TestPlusモデル_AgentPlatformのtranscribe既定は代わりのモデルで送りstderrにだけ出す(t *testing.T) {
+func TestPlusモデル_AgentPlatformのtranscribe既定は代わりのモデルで送りstderrに英語で出す(t *testing.T) {
 	stub := newInteractionStub(t, gcsOKResponse)
-	result := runPlus(t, t.TempDir(), nil, gcsVertexArgs(stub, "transcribe", "--input", "gs://bucket/talk.mp3", "--out", filepath.Join(t.TempDir(), "out.txt"))...)
+	// 既定の出力形式（-o 無し）のときだけ stderr に出る。
+	args := withoutOutputFormat(gcsVertexArgs(stub, "transcribe", "--input", "gs://bucket/talk.mp3", "--out", filepath.Join(t.TempDir(), "out.txt")))
+	result := runPlus(t, t.TempDir(), nil, args...)
 	if result.err != nil {
 		t.Fatalf("transcribe failed: %v\n%s", result.err, result.stderr)
 	}
 	if got := modelOf(t, stub); got != "gemini-3.8-flash" {
 		t.Errorf("model = %v, want gemini-3.8-flash", got)
 	}
-	if !strings.Contains(result.stderr, "gemini-3.5-transcribe") || !strings.Contains(result.stderr, "gemini-3.8-flash") {
-		t.Errorf("stderr に読み替えの案内が無い:\n%s", result.stderr)
+	want := "Using gemini-3.8-flash: gemini-3.5-transcribe is not available on Agent Platform"
+	if !strings.Contains(result.stderr, want) {
+		t.Errorf("stderr に %q が無い:\n%s", want, result.stderr)
 	}
 	if strings.Contains(result.stdout, "gemini-3.5-transcribe") {
 		t.Errorf("stdout に読み替えの案内が混ざっている:\n%s", result.stdout)
 	}
-	var out any
-	if err := json.Unmarshal([]byte(result.stdout), &out); err != nil {
-		t.Errorf("-o json の stdout が JSON でなくなった: %v\n%s", err, result.stdout)
+}
+
+func TestPlusモデル_AgentPlatformの既定の読み替えはjsonでは出力に出さない(t *testing.T) {
+	for _, flag := range []string{"-o", "--agent-mode"} {
+		stub := newInteractionStub(t, gcsOKResponse)
+		args := withoutOutputFormat(gcsVertexArgs(stub, "transcribe", "--input", "gs://bucket/talk.mp3", "--out", filepath.Join(t.TempDir(), "out.txt")))
+		if flag == "-o" {
+			args = append([]string{"-o", "json"}, args...)
+		} else {
+			args = append([]string{flag}, args...)
+		}
+		result := runPlus(t, t.TempDir(), nil, args...)
+		if result.err != nil {
+			t.Fatalf("%s: transcribe failed: %v\n%s", flag, result.err, result.stderr)
+		}
+		if strings.Contains(result.stderr, "gemini-3.5-transcribe") {
+			t.Errorf("%s: stderr に案内が出ている:\n%s", flag, result.stderr)
+		}
+		if got := modelOf(t, stub); got != "gemini-3.8-flash" {
+			t.Errorf("%s: model = %v, want gemini-3.8-flash", flag, got)
+		}
 	}
+}
+
+// withoutOutputFormat は引数列から "-o json" を取り除く。
+func withoutOutputFormat(args []string) []string {
+	out := make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		if args[i] == "-o" {
+			i++
+			continue
+		}
+		out = append(out, args[i])
+	}
+	return out
 }
 
 func TestPlusモデル_AgentPlatformでunsupportedのモデルを明示すると通信せず候補を示して終了コード2(t *testing.T) {
@@ -73,7 +106,7 @@ func TestPlusモデル_AgentPlatformのgenerate既定はそのまま送る(t *te
 	if got := modelOf(t, stub); got != "gemini-4-hydrogen" {
 		t.Errorf("model = %v, want gemini-4-hydrogen", got)
 	}
-	if strings.Contains(result.stderr, "Agent Platform に無い") {
+	if strings.Contains(result.stderr, "is not available on Agent Platform") {
 		t.Errorf("読み替えていないのに案内が出た:\n%s", result.stderr)
 	}
 }

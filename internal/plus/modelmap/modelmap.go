@@ -111,21 +111,22 @@ func onAgentPlatform(cmd *cobra.Command) bool {
 	return err == nil && s.IsVertex()
 }
 
-// ResolveDefault は --model 未指定で既定のモデル def を使うときの送り先を返す。
-// 既定が Agent Platform に無ければ代わりのモデルにし、その旨を stderr に 1 行出す（stdout は汚さない）。
+// ResolveDefault は --model 未指定で既定のモデル def を使うときの送り先と、読み替えたときの案内文を返す。
+// 既定が Agent Platform に無ければ代わりのモデルにする。案内は黙る条件を持つ本家の progress に通すため、
+// ここでは書かずに返す（-o json・--agent-mode で stderr を汚さない）。
 // Gemini API のときは何もしない。
-func ResolveDefault(cmd *cobra.Command, def string) string {
+func ResolveDefault(cmd *cobra.Command, def string) (use, notice string) {
 	if !onAgentPlatform(cmd) {
-		return def
+		return def, ""
 	}
 	use, replaced, err := resolve(def, Lookup(def), false)
 	if err != nil {
-		return def
+		return def, ""
 	}
 	if replaced {
-		fmt.Fprintf(cmd.ErrOrStderr(), "%s は Agent Platform に無いので %s を使う\n", def, use)
+		return use, fmt.Sprintf("Using %s: %s is not available on Agent Platform", use, def)
 	}
-	return use
+	return use, ""
 }
 
 // Guard は --model で明示されたモデルが Agent Platform に無いとき、通信する前に候補つきのエラーで止める。
