@@ -44,6 +44,10 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	// plus: gs:// の入力と案内（media_plus.go）。本家の import 行の並びを変えないよう別の塊に置く。
+	"github.com/google-gemini/gemini-api-cli/internal/plus"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/gcsinput"
 )
 
 // maxInlineRequestBytes is the CLI's conservative budget for one interaction
@@ -355,6 +359,8 @@ const (
 	mediaInputLocal mediaInputKind = iota
 	mediaInputRemoteFile
 	mediaInputYouTube
+	// plus: gs:// の URI。Agent Platform でだけ受け、読まずに URI として送る。
+	mediaInputGCS
 )
 
 // classifyMediaInput decides what one --input refers to without touching the
@@ -371,6 +377,15 @@ func classifyMediaInput(cmd *cobra.Command, arg, ref string, allowYouTube bool) 
 				"Download the media locally or upload it with \"gemini-api files upload <path>\"")
 		}
 		return mediaInputYouTube, nil
+	}
+	// plus: gs:// は Agent Platform でだけ受ける。Gemini API では本家の扱い（ローカル探索）に流さず止める。
+	if plus.Enabled() && gcsinput.IsURI(arg) {
+		if !onAgentPlatform(cmd) {
+			return 0, usageError(ref+": gs:// URIs are only supported on Agent Platform; the Gemini API cannot read Cloud Storage",
+				"Pass --backend vertex (or set GOOGLE_GENAI_USE_VERTEXAI=true) to send the gs:// URI",
+				"Or upload the file with \"gemini-api files upload <path>\" and pass files/<id>")
+		}
+		return mediaInputGCS, nil
 	}
 	if fileRef, ok := extractFullFilesURI(cmd, arg); ok {
 		if _, _, valid := normalizeFileID(fileRef); !valid {
@@ -401,7 +416,7 @@ func classifyMediaInput(cmd *cobra.Command, arg, ref string, allowYouTube bool) 
 // checkLocalFile enforces what an inline input must satisfy — a non-empty
 // regular file within the inline cap whose MIME type the API and the command
 // accept — and returns its inline cost and MIME type.
-func checkLocalFile(path, mimeOverride, ref string, policy mediaPolicy) (int64, string, error) {
+func checkLocalFile(path, mimeOverride, ref string, policy mediaPolicy, agentPlatform bool) (int64, string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -435,8 +450,9 @@ func checkLocalFile(path, mimeOverride, ref string, policy mediaPolicy) (int64, 
 	}
 	if cost > maxInlineBytes {
 		return 0, "", usageError(
+			// plus: Agent Platform では Files API の案内を出さず、gs:// に置く直し方を示す。
 			fmt.Sprintf("%s: file is %d bytes (%d as base64); this CLI keeps inline requests under %d MB", ref, info.Size(), cost, maxInlineRequestBytes>>20),
-			fmt.Sprintf("Run \"gemini-api files upload %s\" and pass the returned files/<id> instead", path))
+			overflowHint(path, agentPlatform))
 	}
 	return cost, mimeType, nil
 }
@@ -468,6 +484,8 @@ func probeLocalFile(path, mimeType, ref string) error {
 // or sent. Probing each file also catches permissions and mislabelled text.
 func prevalidateMediaInputs(cmd *cobra.Command, inputs []string, mimeOverride string, policy mediaPolicy) error {
 	var inlineBytes int64
+	// plus: gs:// の入力は URI として検証する（ローカル探索とは別経路）。
+	agentPlatform := onAgentPlatform(cmd)
 	for i, raw := range inputs {
 		arg := strings.TrimSpace(raw)
 		ref := inputRef(i+1, arg)
@@ -475,10 +493,16 @@ func prevalidateMediaInputs(cmd *cobra.Command, inputs []string, mimeOverride st
 		if err != nil {
 			return err
 		}
+		if kind == mediaInputGCS {
+			if _, err := checkGCSInput(arg, mimeOverride, ref, policy); err != nil {
+				return err
+			}
+			continue
+		}
 		if kind != mediaInputLocal {
 			continue
 		}
-		cost, mimeType, err := checkLocalFile(arg, mimeOverride, ref, policy)
+		cost, mimeType, err := checkLocalFile(arg, mimeOverride, ref, policy, agentPlatform)
 		if err != nil {
 			return err
 		}
@@ -489,7 +513,7 @@ func prevalidateMediaInputs(cmd *cobra.Command, inputs []string, mimeOverride st
 		if policy.enforceCumulative && inlineBytes > maxInlineBytes {
 			return usageError(
 				fmt.Sprintf("%s: cumulative inline inputs (base64 included) exceed this CLI's %d MB request budget", ref, maxInlineRequestBytes>>20),
-				fmt.Sprintf("Run \"gemini-api files upload %s\" and pass the returned files/<id> instead", arg))
+				overflowHint(arg, agentPlatform))
 		}
 	}
 	return nil
@@ -544,8 +568,14 @@ func resolveMediaSource(cmd *cobra.Command, s *sdk.GeminiAPI, arg, mimeOverride 
 		}
 		name, id, _ := normalizeFileID(fileArg)
 		return resolveRemoteFile(cmd, s, name, id, mimeOverride, ref, policy)
+	case mediaInputGCS:
+		mimeType, err := checkGCSInput(arg, mimeOverride, ref, policy)
+		if err != nil {
+			return nil, err
+		}
+		return &mediaSource{content: mediaContentBlock(mimeType, arg, false), label: arg, mimeType: mimeType}, nil
 	}
-	_, mimeType, err := checkLocalFile(arg, mimeOverride, ref, policy)
+	_, mimeType, err := checkLocalFile(arg, mimeOverride, ref, policy, onAgentPlatform(cmd))
 	if err != nil {
 		return nil, err
 	}

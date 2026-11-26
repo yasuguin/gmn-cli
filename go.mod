@@ -13,12 +13,14 @@ require (
 	github.com/spf13/pflag v1.0.9
 	github.com/spyzhov/ajson v0.9.6
 	github.com/zalando/go-keyring v0.2.6
+	golang.org/x/oauth2 v0.38.0
 	golang.org/x/term v0.46.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20260811164956-006e29f97886 // indirect

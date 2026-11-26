@@ -21,6 +21,9 @@ import (
 
 	"github.com/google-gemini/gemini-api-cli/internal/output"
 	"github.com/spf13/cobra"
+
+	// plus: 本家の import 行の並びを変えないよう別の塊に置く。
+	"github.com/google-gemini/gemini-api-cli/internal/plus/modelmap"
 )
 
 func initCatalogCmds(parent *cobra.Command) error {
@@ -97,6 +100,9 @@ func newModelsCatalogCmd() *cobra.Command {
 				{"value": "gemini-omni-1.2-flash", "description": "Gemini Omni 1.2 Flash - Our latest multimodal model for fast, conversational video generation, editing, and cinematic control.", "default": false, "default_for": []string{"video"}, "group": "Video"},
 				{"value": "gemini-omni-1.1-flash", "description": "Our high-performance multimodal model designed for fast, conversational video generation, editing, and cinematic control.", "default": false, "group": "Video"},
 				{"value": "gemini-omni-flash-preview", "description": "Preview release of our multimodal model for conversational video generation, editing, and cinematic control.", "default": false, "group": "Video"},
+			}
+			if handled, err := modelmap.PrintCatalog(cmd, values); handled || err != nil { // plus: Agent Platform では各モデルの状態と読み替え先を足して出す
+				return err
 			}
 			if output.IsMachineMode(cmd) {
 				return output.LocalResult(cmd, values)

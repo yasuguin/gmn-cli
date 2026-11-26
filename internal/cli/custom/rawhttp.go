@@ -29,6 +29,7 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/client"
 	"github.com/google-gemini/gemini-api-cli/internal/config"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/sdkerrors"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/sdkinternal/hooks"
@@ -156,7 +157,7 @@ func newRawTransport(cmd *cobra.Command) (*rawTransport, error) {
 	} else {
 		httpClient = client.WrapClientForDiagnostics(cmd, httpClient)
 	}
-	t.client = httpClient
+	t.client = backend.WrapHTTPClient(cmd, httpClient) // plus: Agent Platform では ADC のトークンをリクエストごとに付ける
 	return t, nil
 }
 

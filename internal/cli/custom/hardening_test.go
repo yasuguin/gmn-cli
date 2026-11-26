@@ -100,7 +100,7 @@ func TestCheckLocalFileInlineBoundary(t *testing.T) {
 			t.Fatal(err)
 		}
 		f.Close()
-		_, _, err = checkLocalFile(path, "", "--input[1]", analyzePolicy)
+		_, _, err = checkLocalFile(path, "", "--input[1]", analyzePolicy, false) // plus: Agent Platform の案内は対象外（Gemini API の文言）
 		if (err == nil) != tc.wantOK {
 			t.Errorf("%s: checkLocalFile error = %v, want ok=%v", name, err, tc.wantOK)
 		}

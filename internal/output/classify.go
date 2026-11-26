@@ -29,6 +29,7 @@ import (
 
 	"github.com/google-gemini/gemini-api-cli/internal/clierrors"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/guidance"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/sdkinternal/utils"
 	"github.com/spf13/cobra"
 )
@@ -539,6 +540,7 @@ func assembleHints(cmd *cobra.Command, err error, c Classification, bodyMap, err
 	if declared := declaredCommandHints(cmd); declared != nil && c.Reason != "" && !c.credentialsMissing {
 		hints = append(hints, declared[c.Reason]...)
 	}
+	hints = guidance.Hints(cmd, hints) // plus: Agent Platform では API key を求める案内を ADC の案内に替える
 	seen := make(map[string]bool, len(hints))
 	deduped := make([]string, 0, len(hints))
 	for _, hint := range hints {

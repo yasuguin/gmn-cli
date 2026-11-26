@@ -62,6 +62,10 @@ func shouldColorizeWriter(colorFlag string, out io.Writer) bool {
 		if _, ok := os.LookupEnv("FORCE_COLOR"); ok {
 			return true
 		}
+		// plus: コマンド名を置き換える writer の下のファイルで端末判定する
+		if u, ok := out.(interface{ File() *os.File }); ok {
+			out = u.File()
+		}
 		file, ok := out.(*os.File)
 		return ok && term.IsTerminal(int(file.Fd()))
 	}

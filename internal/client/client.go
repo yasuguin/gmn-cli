@@ -28,6 +28,7 @@ import (
 
 	"github.com/google-gemini/gemini-api-cli/internal/config"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/components"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/retry"
 	"github.com/google-gemini/gemini-api-cli/internal/sdk"
@@ -88,6 +89,7 @@ func NewClient(cmd *cobra.Command, allowedSecurityFields ...string) (*sdk.Gemini
 			httpClient = &repeatedHeaderClient{next: httpClient, headers: repeated}
 		}
 	}
+	httpClient = backend.WrapHTTPClient(cmd, httpClient) // plus: Agent Platform では ADC のトークンをリクエストごとに付ける
 	sdkOpts = append(sdkOpts, sdk.WithClient(httpClient))
 	return sdk.New(sdkOpts...), nil
 }

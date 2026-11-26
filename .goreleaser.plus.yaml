@@ -1,0 +1,87 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# fork（gemini-headless）用のリリース設定。本家の .goreleaser.yaml とは別ファイルで、本家の設定は変えない。
+# タグは headless-v0.1.0 形式。GoReleaser OSS は monorepo.tag_prefix（Pro 限定）を使えない。
+# 版は .Tag から "headless-v" を trimprefix で外して得る（ldflags の plus.Version）。
+# 現在のタグを semver として解析する検査は --skip=validate でだけ外せる（release workflow と snapshot が付ける）。
+# そのため ctx.Semver は空になり、prerelease: auto・skip_upload: auto は常に正式版扱いになる。
+# prerelease は release workflow が gh release edit で付け、cask は skip_upload のテンプレートで判定する。
+version: 2
+
+project_name: gemini-headless-cli
+
+# 本家の .goreleaser.yaml は before に go mod tidy を置くが、snapshot で go.mod を書き換えないよう置かない。
+
+builds:
+  - id: gemini-headless
+    main: ./cmd/gemini-headless
+    binary: gemini-headless
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      # plus: fork の版は internal/plus の Version に入れる（本家の main.version は使わない）
+      - -X github.com/google-gemini/gemini-api-cli/internal/plus.Version={{ trimprefix .Tag "headless-v" }}
+
+archives:
+  - id: gemini-headless
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE*
+
+# Homebrew: GoReleaser v2.10 で brews（Formula）は deprecated、後継の homebrew_casks を使う。
+# CLI のバイナリは binaries で入れられる。cask は macOS 専用（Linux の Homebrew には出さない）。
+homebrew_casks:
+  - name: gemini-headless-cli
+    ids:
+      - gemini-headless
+    binaries:
+      - gemini-headless
+    homepage: https://github.com/yasuguin/gemini-headless-cli
+    description: "Unofficial fork of google-gemini/gemini-api-cli (Gemini API and Agent Platform). Not affiliated with Google."
+    repository:
+      owner: yasuguin
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Casks
+    # ctx.Semver が空なので auto は効かない。タグの版に - があるプレリリースは tap に出さない。
+    skip_upload: '{{ if contains .Tag "-" }}true{{ else }}false{{ end }}'
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
+
+release:
+  github:
+    owner: yasuguin
+    name: gemini-headless-cli
+  draft: false
+  prerelease: auto
+  mode: append
+  # PLUS_BASE_VERSION は release workflow と scripts/plus/release-snapshot.sh が internal/cli/version.go から渡す。
+  # GitHub Release の tag 名は {{ .Tag }}（headless-v0.1.0）のまま。本家の v* タグは作らない。
+  header: |
+    Unofficial fork of google-gemini/gemini-api-cli. Not affiliated with Google.
+
+    Base: google-gemini/gemini-api-cli v{{ .Env.PLUS_BASE_VERSION }}
+
+checksum:
+  name_template: "checksums.txt"

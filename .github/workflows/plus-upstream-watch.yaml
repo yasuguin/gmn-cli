@@ -1,0 +1,71 @@
+name: plus upstream watch
+
+# 本家の最新リリースが fork の main に取り込まれていなければ issue を 1 件立てる。
+# 取り込み自体は手元の scripts/plus/sync-upstream.sh で行う（この workflow は通知だけ）。
+on:
+    schedule:
+        - cron: "0 0 * * 1"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    issues: write
+
+jobs:
+    watch:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        env:
+            GH_TOKEN: ${{ github.token }}
+            UPSTREAM_REPO: google-gemini/gemini-api-cli
+            UPSTREAM_URL: https://github.com/google-gemini/gemini-api-cli.git
+            LABEL: upstream-release
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+            - name: 本家の最新リリースを取る
+              id: latest
+              run: |
+                  tag=$(gh release view --repo "$UPSTREAM_REPO" --json tagName --jq .tagName)
+                  echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            - name: fork の main に取り込み済みかを確かめる
+              id: merged
+              env:
+                  TAG: ${{ steps.latest.outputs.tag }}
+              run: |
+                  git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+                  git fetch --no-tags "$UPSTREAM_URL" "+refs/tags/${TAG}:refs/tags/upstream/${TAG}"
+                  # タグの commit が main の履歴に含まれていれば取り込み済み。
+                  if git merge-base --is-ancestor "refs/tags/upstream/${TAG}^{commit}" refs/remotes/origin/main; then
+                      echo "done=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "done=false" >> "$GITHUB_OUTPUT"
+                  fi
+            - name: 未取り込みなら issue を 1 件立てる（同じ版の issue が open/closed どちらでも有れば立てない）
+              if: steps.merged.outputs.done == 'false'
+              env:
+                  TAG: ${{ steps.latest.outputs.tag }}
+              run: |
+                  title="upstream ${TAG} を取り込む"
+                  # 同じ版の issue の有無を、open と closed の両方で確かめる。
+                  existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --label "$LABEL" --state all --limit 1000 --json title --jq '.[].title')
+                  if printf '%s\n' "$existing" | grep -Fxq "$title"; then
+                      echo "${title} の issue は既にあるので立てません"
+                      exit 0
+                  fi
+                  gh label create "$LABEL" --repo "$GITHUB_REPOSITORY" --color 0E8A16 \
+                      --description "本家の新しいリリースの取り込み" --force
+                  body=$(cat <<BODY
+                  本家 ${UPSTREAM_REPO} の最新リリース ${TAG} が、fork の main にまだ取り込まれていません。
+
+                  取り込み（手元の clone で）:
+
+                  \`\`\`
+                  scripts/plus/sync-upstream.sh ${TAG}
+                  \`\`\`
+
+                  衝突の直し方と、merge 後に確かめることは \`.agents/skills/plus-upstream-sync/SKILL.md\` に書いてあります。
+                  BODY
+                  )
+                  gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --label "$LABEL" --body "$body"

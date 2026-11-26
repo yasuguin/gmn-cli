@@ -25,6 +25,8 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/operations"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
+
+	"github.com/google-gemini/gemini-api-cli/internal/plus/gencontent"
 )
 
 var runCmdMeta = []flagutil.FlagMeta{
@@ -144,6 +146,9 @@ func executeRunCmd(cmd *cobra.Command, args []string, asyncIntent bool) (*operat
 	req, err := flagutil.BuildRequest[operations.CreateInteractionRequest](cmd, runCmdMeta, "Body", "body")
 	if err != nil {
 		return nil, flagutil.WithCLIValidation(err)
+	}
+	if handled, err := gencontent.TryImage(cmd, req.Body); handled { // plus: Agent Platform の image は generateContent で呼ぶ
+		return nil, err
 	}
 	s, err := client.NewClient(cmd)
 	if err != nil {

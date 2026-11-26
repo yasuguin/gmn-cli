@@ -22,6 +22,7 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/client"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/vertexmodels" // plus:
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/operations"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
@@ -67,6 +68,9 @@ func runModelsListCmd(cmd *cobra.Command, args []string) error {
 	}
 	if flagutil.FlagChanged(cmd, "max-pages") && !allPages {
 		return flagutil.WithCLIValidation(fmt.Errorf("--max-pages requires --all"))
+	}
+	if vertexmodels.Enabled() { // plus: Agent Platform は基盤モデルの一覧を叩き、応答を Gemini API の形に写す
+		return vertexmodels.RunList(cmd)
 	}
 	req, err := flagutil.BuildRequest[operations.ModelsListRequest](cmd, modelsListCmdMeta, "", "")
 	if err != nil {

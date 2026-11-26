@@ -17,6 +17,7 @@ package custom
 import (
 	"github.com/google-gemini/gemini-api-cli/internal/config"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/guidance"
 	"github.com/spf13/cobra"
 )
 
@@ -31,12 +32,24 @@ var requestCredentials = []string{"api-key", "access-token"}
 func attachMissingCredentialHelp(root *cobra.Command) {
 	original := root.HelpFunc()
 	root.SetHelpFunc(func(c *cobra.Command, args []string) {
-		if c != c.Root() || !credentialMissing(c) {
+		if c != c.Root() {
+			original(c, args)
+			return
+		}
+		// plus: Agent Platform では API key ではなく ADC・project の案内を出す
+		hint, handled := guidance.HelpHint(c)
+		if !handled && !credentialMissing(c) {
 			original(c, args)
 			return
 		}
 		long := c.Long
-		c.Long += "\n\n" + missingCredentialHint
+		c.Long = guidance.Docs(c, c.Long) // plus
+		if !handled {
+			hint = missingCredentialHint
+		}
+		if hint != "" {
+			c.Long += "\n\n" + hint
+		}
 		defer func() { c.Long = long }()
 		original(c, args)
 	})

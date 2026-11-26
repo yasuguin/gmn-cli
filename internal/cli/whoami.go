@@ -21,6 +21,7 @@ import (
 
 	"github.com/google-gemini/gemini-api-cli/internal/config"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
+	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -70,6 +71,7 @@ func runWhoamiCmd(cmd *cobra.Command, args []string) error {
 			credentials["access-token"] = map[string]any{"source": source, "value": maskSecret(value)}
 		}
 		info["credentials"] = credentials
+		backend.AnnotateWhoami(cmd, info) // plus: backend・project・location
 		parameters := map[string]any{}
 		{
 			value, source := config.ResolveCredential(cmd, "api-version", true)
@@ -98,6 +100,7 @@ func runWhoamiCmd(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(out, "Config file: %s\n", config.GetConfigPath())
 	fmt.Fprintf(out, "Environment prefix: GEMINI_\n")
 	fmt.Fprintln(out)
+	backend.PrintWhoami(out, cmd) // plus: backend・project・location
 	fmt.Fprintln(out, "Credentials:")
 
 	// Gemini API key sent as x-goog-api-key.

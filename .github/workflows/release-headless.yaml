@@ -1,0 +1,223 @@
+name: Release gemini-headless-cli
+
+# headless-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
+# GitHub Releases は goreleaser job、PyPI は pypi job、npm は npm job。
+on:
+  push:
+    tags:
+      - "headless-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # release ノートの土台表示に使う本家の版。本家の internal/cli/version.go が正本。
+      - name: Read upstream CLI version
+        run: |
+          cli_version=$(sed -n 's/^var Version = "\(.*\)"$/\1/p' internal/cli/version.go)
+          if [ -z "$cli_version" ]; then
+            printf '::error::Could not read Version from internal/cli/version.go\n'
+            exit 1
+          fi
+          printf 'PLUS_BASE_VERSION=%s\n' "$cli_version" >> "$GITHUB_ENV"
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --skip=validate -f .goreleaser.plus.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+      # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かない。タグの版に - があれば付け直す。
+      - name: Mark GitHub Release as prerelease
+        if: contains(github.ref_name, '-')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "$GITHUB_REF_NAME" --prerelease
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: release-headless-artifacts
+          path: |
+            dist/
+            !dist/*.txt
+          retention-days: 30
+
+  pypi:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    # trusted publishing の対象。environment `pypi` は GitHub の Settings で作る（保守者が手で行う）。
+    environment:
+      name: pypi
+      url: https://pypi.org/project/gemini-headless-cli/
+    permissions:
+      # PyPI の trusted publishing（OIDC）に必要。API token は使わない。
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download goreleaser artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-headless-artifacts
+          path: ${{ runner.temp }}/dist
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+
+      - name: Test wheel builder
+        run: python3 -m unittest discover -s packaging/pypi/tests
+
+      - name: Build wheels
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#headless-v}"
+          uv run --no-project packaging/pypi/build_wheels.py \
+            --dist "${{ runner.temp }}/dist" \
+            --out "${{ runner.temp }}/wheels" \
+            --version "$version"
+
+      # 6 種のうち Linux x86_64 を実際に入れて動かし、版が tag と一致することを確かめてから公開する。
+      - name: Smoke test wheel
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#headless-v}"
+          wheel=$(ls "${{ runner.temp }}"/wheels/*manylinux_2_17_x86_64*.whl)
+          out=$(uvx --from "$wheel" gemini-headless-cli --version | head -n 1)
+          echo "$out"
+          case "$out" in
+            "gemini-headless ${version} "*) ;;
+            *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
+          esac
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: ${{ runner.temp }}/wheels/
+          # 途中で失敗した再実行で、公開済みの wheel があっても止まらないようにする。
+          skip-existing: true
+
+  npm:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    # trusted publishing の対象。environment `npm` は GitHub の Settings で作る（保守者が手で行う）。
+    # npmjs.com 側の trusted publisher の environment 欄は `npm` にそろえる。
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/gemini-headless-cli
+    permissions:
+      # npm の trusted publishing（OIDC）に必要。NPM_TOKEN は使わない。--provenance は npm が GitHub Actions で既定で付けるが、明示する。
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download goreleaser artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-headless-artifacts
+          path: ${{ runner.temp }}/dist
+
+      # npm の trusted publishing は npm CLI 11.5.1 以上が必要（https://docs.npmjs.com/trusted-publishers）。
+      # pnpm の publish は trusted publishing に触れていないため、公開は npm CLI で行う。
+      # registry-url は付けない（.npmrc に token の行が入り、OIDC の認証と食い違うため）。
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+
+      - name: Check npm CLI version
+        run: |
+          npm_version=$(npm --version)
+          printf 'npm %s\n' "$npm_version"
+          # 11.5.1 以上であることを確かめる。sort -V -C は並びが昇順のときだけ成功する。
+          if ! printf '%s\n%s\n' "11.5.1" "$npm_version" | sort -V -C; then
+            printf '::error::npm CLI が 11.5.1 より古い: %s\n' "$npm_version"
+            exit 1
+          fi
+
+      - name: Build npm packages
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#headless-v}"
+          node packaging/npm/build.mjs \
+            --dist "${{ runner.temp }}/dist" \
+            --out "${{ runner.temp }}/npm" \
+            --version "$version"
+
+      # Linux x64 の OS 用バイナリを直接動かし、版が tag と一致することを確かめてから公開する。
+      - name: Smoke test native binary
+        env:
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          version="${PLUS_VERSION#headless-v}"
+          out=$("${{ runner.temp }}/npm/gemini-headless-cli-linux-x64/gemini-headless" --version | head -n 1)
+          echo "$out"
+          case "$out" in
+            "gemini-headless ${version} "*) ;;
+            *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
+          esac
+
+      # OS 別パッケージを先に出し、本体の optionalDependencies が参照する版を揃えてから本体を出す。
+      # npm は公開前のパッケージに trusted publisher を設定できないので、初回だけ secret NPM_TOKEN
+      # （期限の短い granular トークン）で公開する。初回の後に trusted publisher を設定し、secret は消す。
+      # secret が無ければ OIDC（trusted publishing）で公開する。
+      # プレリリースの版（- を含む）は dist-tag を next にし、latest を動かさない。
+      # 途中で失敗した再実行に備え、公開済みの版は飛ばす（同じ版の再公開は npm が拒否するため）。
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PLUS_VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${PLUS_VERSION#headless-v}"
+          case "$version" in
+            *-*) dist_tag=next ;;
+            *) dist_tag=latest ;;
+          esac
+          if [ -n "${NPM_TOKEN:-}" ]; then
+            echo "::warning::NPM_TOKEN で公開する（初回だけの想定。公開後に trusted publisher を設定して secret を消す）"
+            # トークンは一時ファイルの .npmrc にだけ置き、npm にはそのファイルを読ませる。
+            npmrc="${RUNNER_TEMP}/npmrc"
+            umask 077
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" >"$npmrc"
+            export NPM_CONFIG_USERCONFIG="$npmrc"
+          fi
+          for pkg in gemini-headless-cli-darwin-arm64 gemini-headless-cli-darwin-x64 \
+            gemini-headless-cli-linux-arm64 gemini-headless-cli-linux-x64 \
+            gemini-headless-cli-win32-arm64 gemini-headless-cli-win32-x64 \
+            gemini-headless-cli; do
+            # ディレクトリ名はスコープを含まないので、公開済みの判定は package.json の name で行う
+            # （OS 別は @yasuguin/ 付き。ディレクトリ名で引くと、同名のスコープなしパッケージを見てしまう）。
+            name=$(node -p "require('${{ runner.temp }}/npm/$pkg/package.json').name")
+            if [ "$(npm view "${name}@${version}" version 2>/dev/null || true)" = "$version" ]; then
+              echo "${name}@${version} は公開済みなので飛ばす"
+              continue
+            fi
+            npm publish "${{ runner.temp }}/npm/$pkg" --provenance --access public --tag "$dist_tag"
+          done

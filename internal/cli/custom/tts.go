@@ -123,6 +123,9 @@ func runTTS(cmd *cobra.Command, args []string) error {
 	if err := validateTTSOutPath(cmd); err != nil {
 		return err
 	}
+	if ttsUsesGenerateContent(cmd, model) { // plus: Agent Platform の tts は generateContent で呼ぶ（声の作成より前に分岐）
+		return runTTSGenerateContent(cmd, model, text, style, speech, absent, voicePrompt)
+	}
 	s, err := client.NewClient(cmd)
 	if err != nil {
 		return err
