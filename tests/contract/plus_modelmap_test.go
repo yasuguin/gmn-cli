@@ -55,12 +55,12 @@ func TestPlusモデル_AgentPlatformでunsupportedのモデルを明示すると
 
 func TestPlusモデル_AgentPlatformで未確認のモデルはそのまま送る(t *testing.T) {
 	stub := newInteractionStub(t, gcsOKResponse)
-	result := runPlus(t, t.TempDir(), nil, gcsVertexArgs(stub, "transcribe", "--model", "gemini-2.5-flash", "--input", "gs://bucket/talk.mp3", "--out", filepath.Join(t.TempDir(), "out.txt"))...)
+	result := runPlus(t, t.TempDir(), nil, gcsVertexArgs(stub, "transcribe", "--model", "some-unlisted-model", "--input", "gs://bucket/talk.mp3", "--out", filepath.Join(t.TempDir(), "out.txt"))...)
 	if result.err != nil {
 		t.Fatalf("transcribe failed: %v\n%s", result.err, result.stderr)
 	}
-	if got := modelOf(t, stub); got != "gemini-2.5-flash" {
-		t.Errorf("model = %v, want gemini-2.5-flash", got)
+	if got := modelOf(t, stub); got != "some-unlisted-model" {
+		t.Errorf("model = %v, want some-unlisted-model", got)
 	}
 }
 

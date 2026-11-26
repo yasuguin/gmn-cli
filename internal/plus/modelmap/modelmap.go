@@ -25,7 +25,7 @@ const (
 	Renamed Status = "renamed"
 	// Unsupported は Agent Platform に無いモデル（Interactions API が拒否する）。Entry.Alternatives が代わりの候補。
 	Unsupported Status = "unsupported"
-	// GenerateContent は Interactions API では通らず、generateContent で呼ぶモデル（image・tts。実装は #11・#12）。
+	// GenerateContent は Interactions API では通らず、generateContent で呼ぶモデル（image・tts）。
 	// 止めずにそのまま送る。
 	GenerateContent Status = "generate-content"
 	// Unverified は Agent Platform での動作が未確認のモデル。止めずにそのまま送る。
@@ -43,18 +43,35 @@ type Entry struct {
 
 const transcribeFallback = "gemini-3.8-flash"
 
-// table が表の本体。キーは Gemini API と共通のモデル名。実測は 2026-11-26（global）。
+// table が表の本体。キーは Gemini API と共通のモデル名。
+// 実測は 2026-11-26（global）。Interactions API は generate --model、generateContent は image・smoke の --probe-models で確かめた。
 var table = map[string]Entry{
 	"gemini-4-hydrogen": {Status: Verified},
 	"gemini-3.8-flash":  {Status: Verified},
+	"gemini-3.7-flash":  {Status: Verified},
+	"gemini-3.5-flash":  {Status: Verified},
+	"gemini-4-argon":    {Status: Verified},
+	"gemini-4-carbon":   {Status: Verified},
+	"gemini-4-neon":     {Status: Verified},
 
 	"gemini-3.5-transcribe": {Status: Unsupported, Alternatives: []string{transcribeFallback}},
 
-	// Interactions API が拒否した。generateContent での扱いは #11・#12 で確かめる。
-	"gemini-nano-banana-2.1":       {Status: GenerateContent},
-	"gemini-3.1-flash-image":       {Status: GenerateContent},
-	"gemini-3-pro-image":           {Status: GenerateContent},
-	"gemini-2.5-flash-image":       {Status: GenerateContent},
+	// Interactions API が 400（not supported）で拒否した。代わりは Interactions で通ったモデルから近い世代・用途のものにする:
+	// flash 系と gemma は軽量の gemini-3.5-flash、pro 系は上位の gemini-4-argon。
+	"gemini-2.5-flash":    {Status: Unsupported, Alternatives: []string{"gemini-3.5-flash"}},
+	"gemini-flash-latest": {Status: Unsupported, Alternatives: []string{"gemini-3.5-flash"}},
+	"gemma-4-31b-it":      {Status: Unsupported, Alternatives: []string{"gemini-3.5-flash"}},
+	"gemini-2.5-pro":      {Status: Unsupported, Alternatives: []string{"gemini-4-argon"}},
+	"gemini-pro-latest":   {Status: Unsupported, Alternatives: []string{"gemini-4-argon"}},
+
+	// image は generateContent で通った（Interactions API は拒否）。nano-banana-pro-preview は publisher model が無く 404。
+	"gemini-nano-banana-2.1":  {Status: GenerateContent},
+	"gemini-3.1-flash-image":  {Status: GenerateContent},
+	"gemini-3-pro-image":      {Status: GenerateContent},
+	"gemini-2.5-flash-image":  {Status: GenerateContent},
+	"nano-banana-pro-preview": {Status: Unsupported, Alternatives: []string{"gemini-3-pro-image"}},
+
+	// tts は generateContent での扱いを #12 で確かめる。
 	"gemini-3.8-flash-tts":         {Status: GenerateContent},
 	"gemini-3.8-flash-lite-tts":    {Status: GenerateContent},
 	"gemini-3.1-flash-tts-preview": {Status: GenerateContent},
