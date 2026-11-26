@@ -18,8 +18,9 @@
 ## リリースの出し方
 
 - タグは手で打ちません。main に PR が入るたびに、release-please がリリース PR（版上げと `CHANGELOG.md` の更新）を作り直します。
-- 版は main に入った PR の題（conventional commit）から決まります。`fix` で patch、`feat` で minor が上がります。`docs`・`ci`・`chore` だけなら版は上がりません。
+- 版は、前のリリースから main に入った commit の conventional commit の種類で決まります。`fix` で patch、`feat` で minor が上がり、`docs`・`ci`・`chore` だけなら上がりません。0.x の間は、破壊的変更（`feat!` など）も minor の上げにとどめます。
+- 本家の取り込みは merge commit で入るので、本家の commit（`feat(cli): …` など）も版の計算に入ります。本家の機能が入ったら minor が上がる、と考えてください。
 - `CHANGELOG.md` と GitHub Release の本文は、PR 単位の変更履歴です（GitHub のリリースノートの生成を使う）。本家の取り込みは、取り込みの PR 1 つ分の 1 行になります。
-- リリース PR をマージすると、`gmn-vX.Y.Z` のタグと GitHub Release ができ、同じ workflow（`release-gmn.yaml`）が GitHub Releases・Homebrew・PyPI・npm に公開します。
-- プレリリース（例 `0.1.2-rc.1`）を出すときは、Actions の「Release gmn-cli」を手動で実行し、`release-as` に版を入れます。できたリリース PR を、ほかの PR を main に入れる前にマージしてください（main に PR が入ると、リリース PR は commit から決めた版で作り直されます）。プレリリースは npm では `next`、GitHub Release では prerelease になり、Homebrew には出ません。
-- リリース PR と本家の取り込みの PR は、GitHub App `gmn-cli-bot` が作ります（既定の `GITHUB_TOKEN` で作った PR では必須チェックが起動しないため）。
+- リリース PR をマージすると、`gmn-vX.Y.Z` のタグと下書きの GitHub Release ができ、同じ workflow（`release-gmn.yaml`）が asset を足してから Release を公開し、Homebrew・PyPI・npm に出します。
+- プレリリース（例 `0.1.2-rc.1`）を出すときは、`release-please-config.json` の package `"."` に `"release-as": "0.1.2-rc.1"` を足す PR を入れ、できたリリース PR をマージします。出したら、`release-as` を消す PR を入れてください（残すと次のリリース PR も同じ版になる）。プレリリースは npm では `next`、GitHub Release では prerelease（latest にはしない）になり、Homebrew には出ません。
+- リリース PR は GitHub App `gmn-cli-bot` が作ります。既定の `GITHUB_TOKEN` で作った PR では、必須チェック `noreply` が起動しないためです。

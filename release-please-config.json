@@ -5,6 +5,9 @@
   "include-v-in-tag": true,
   "tag-separator": "-",
   "changelog-type": "github",
+  "bump-minor-pre-major": true,
+  "draft": true,
+  "force-tag-creation": true,
   "packages": {
     ".": {
       "component": "gmn",

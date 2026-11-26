@@ -3,6 +3,9 @@ name: Release gmn-cli
 # main に PR が入るたびに release-please がリリース PR（版上げと CHANGELOG.md）を作り直す。
 # リリース PR をマージすると、release-please が gmn-vX.Y.Z のタグと GitHub Release を作り、
 # 同じ workflow の後ろの job が公開する（GitHub Releases は goreleaser、PyPI は pypi、npm は npm）。
+# GitHub Release は、asset が揃うまで下書きにしておく（install.sh は latest の asset を取るので、
+# asset の無い Release が latest になる時間を作らない）。release-please が下書きとタグを作り、
+# goreleaser が下書きに asset を足し、最後に公開する。
 # 公開を同じ workflow に置くのは、npm と PyPI の trusted publisher が workflow のファイル名で照合するため。
 # タグを手で打っても公開は動かない（タグの push では起動しない）。
 # dev-policy: release — 検証ではなく公開の workflow。main への merge で起動しないとリリース PR を作れない。
@@ -11,11 +14,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      release-as:
-        description: "次のリリース PR の版を指定する（例 0.1.2-rc.1）。空なら commit から決める"
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -37,7 +35,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - name: Release Please
@@ -47,7 +45,6 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          release-as: ${{ inputs.release-as }}
 
   goreleaser:
     needs: release-please
@@ -78,6 +75,13 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
+      # goreleaser の use_existing_draft は、下書きの Release を名前（name_template の既定 {{.Tag}}）で探す。
+      # release-please が付けた名前をタグの名前に揃えておく。
+      - name: Name the draft release after the tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG"
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
@@ -88,16 +92,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
 
-      # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かない。版に - があれば付け直す。
-      # タグの接頭辞 gmn-v 自体に - があるので、判定は接頭辞を外した版で行う（タグ全体で見ると正式版も prerelease になる）。
-      - name: Mark GitHub Release as prerelease
+      # asset が揃ったので下書きを公開する。版に - があればプレリリースにし、latest にしない。
+      # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かず、ここで付ける。
+      # タグの接頭辞 gmn-v 自体に - があるので、判定は接頭辞を外した版で行う。
+      - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version="${RELEASE_TAG#gmn-v}"
           case "$version" in
-            *-*) gh release edit "$RELEASE_TAG" --prerelease ;;
-            *) echo "正式版 ${version} なので prerelease にしない" ;;
+            *-*) gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false ;;
+            *) gh release edit "$RELEASE_TAG" --draft=false --latest ;;
           esac
 
       - name: Upload artifacts

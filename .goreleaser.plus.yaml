@@ -90,7 +90,10 @@ release:
   github:
     owner: yasuguin
     name: gmn-cli
-  draft: false
+  # release-please が作った下書きに asset を足し、下書きのまま残す（公開は release workflow の最後のステップ）。
+  # use_existing_draft は下書きを名前で探すので、release workflow が下書きの名前をタグに揃えてから動かす。
+  draft: true
+  use_existing_draft: true
   prerelease: auto
   mode: append
   # PLUS_BASE_VERSION は release workflow と scripts/plus/release-snapshot.sh が internal/cli/version.go から渡す。
