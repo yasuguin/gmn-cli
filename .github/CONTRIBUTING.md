@@ -14,3 +14,13 @@
   PR に noreply 以外のアドレスの commit が混ざると、必須チェック `noreply` が落ちます。落ちたときは、出力の直し方に従ってください。
 - 通常の PR は squash でマージします。PR の題が main の 1 commit になるので、題は conventional commit の形（`fix(plus): …`・`feat(plus): …`）で書きます。
 - 本家の取り込みの PR だけは merge commit でマージします。本家の履歴を残し、次の取り込みの基点を崩さないためです（`scripts/plus/sync-upstream.sh` は rebase しない前提）。
+
+## リリースの出し方
+
+- タグは手で打ちません。main に PR が入るたびに、release-please がリリース PR（版上げと `CHANGELOG.md` の更新）を作り直します。
+- 版は、前のリリースから main に入った commit の conventional commit の種類で決まります。`fix` で patch、`feat` で minor が上がり、`docs`・`ci`・`chore` だけなら上がりません。0.x の間は、破壊的変更（`feat!` など）も minor の上げにとどめます。
+- 本家の取り込みは merge commit で入るので、本家の commit（`feat(cli): …` など）も版の計算に入ります。本家の機能が入ったら minor が上がる、と考えてください。
+- `CHANGELOG.md` と GitHub Release の本文は、PR 単位の変更履歴です（GitHub のリリースノートの生成を使う）。本家の取り込みは、取り込みの PR 1 つ分の 1 行になります。
+- リリース PR をマージすると、`gmn-vX.Y.Z` のタグと下書きの GitHub Release ができ、同じ workflow（`release-gmn.yaml`）が asset を足してから Release を公開し、Homebrew・PyPI・npm に出します。
+- プレリリース（例 `0.1.2-rc.1`）を出すときは、`release-please-config.json` の package `"."` に `"release-as": "0.1.2-rc.1"` を足す PR を入れ、できたリリース PR をマージします。出したら、`release-as` を消す PR を入れてください（残すと次のリリース PR も同じ版になる）。プレリリースは npm では `next`、GitHub Release では prerelease（latest にはしない）になり、Homebrew には出ません。
+- リリース PR は GitHub App `gmn-cli-bot` が作ります。既定の `GITHUB_TOKEN` で作った PR では、必須チェック `noreply` が起動しないためです。

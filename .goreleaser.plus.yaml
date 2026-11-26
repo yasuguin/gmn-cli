@@ -81,11 +81,19 @@ homebrew_casks:
       email: bot@goreleaser.com
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
 
+# Release の本文は release-please が書く（PR 単位の変更履歴）。goreleaser は既にある Release に
+# asset を足し、本文の後ろに header（免責）を足すだけにする（下の mode: append）。変更履歴は作らない。
+changelog:
+  disable: true
+
 release:
   github:
     owner: yasuguin
     name: gmn-cli
-  draft: false
+  # release-please が作った下書きに asset を足し、下書きのまま残す（公開は release workflow の最後のステップ）。
+  # use_existing_draft は下書きを名前で探すので、release workflow が下書きの名前をタグに揃えてから動かす。
+  draft: true
+  use_existing_draft: true
   prerelease: auto
   mode: append
   # PLUS_BASE_VERSION は release workflow と scripts/plus/release-snapshot.sh が internal/cli/version.go から渡す。
