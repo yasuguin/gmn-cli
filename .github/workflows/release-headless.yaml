@@ -212,8 +212,11 @@ jobs:
             gemini-headless-cli-linux-arm64 gemini-headless-cli-linux-x64 \
             gemini-headless-cli-win32-arm64 gemini-headless-cli-win32-x64 \
             gemini-headless-cli; do
-            if [ "$(npm view "${pkg}@${version}" version 2>/dev/null || true)" = "$version" ]; then
-              echo "${pkg}@${version} は公開済みなので飛ばす"
+            # ディレクトリ名はスコープを含まないので、公開済みの判定は package.json の name で行う
+            # （OS 別は @yasuguin/ 付き。ディレクトリ名で引くと、同名のスコープなしパッケージを見てしまう）。
+            name=$(node -p "require('${{ runner.temp }}/npm/$pkg/package.json').name")
+            if [ "$(npm view "${name}@${version}" version 2>/dev/null || true)" = "$version" ]; then
+              echo "${name}@${version} は公開済みなので飛ばす"
               continue
             fi
             npm publish "${{ runner.temp }}/npm/$pkg" --provenance --access public --tag "$dist_tag"
