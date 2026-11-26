@@ -1,7 +1,7 @@
 'use strict';
 
-// ランチャーの単体テスト。実行は `node --test packaging/npm/test/` で、外部の依存は使わない。
-const { test } = require('node:test');
+// ランチャーの単体テスト。実行は `bun test packaging/npm/test/`（単体テストは bun:test）。
+const { test } = require('bun:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
 const { resolveBinary, unsupportedMessage, SUPPORTED } = require('../lib/platform');

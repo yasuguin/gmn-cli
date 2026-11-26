@@ -27,11 +27,11 @@ func statusText(id string) string {
 	return "Agent Platform: unverified (sent as is)"
 }
 
-// PrintCatalog はオフラインのカタログ（models）に Agent Platform での状態を足して出し、出したら true を返す。
+// PrintCatalog はオフラインのカタログ（models）に Agent Platform での状態を足して出し、出したら true を返す（出力に失敗したら error も返す）。
 // Gemini API のときは false を返し、本家の出力に任せる。
-func PrintCatalog(cmd *cobra.Command, values []map[string]interface{}) bool {
+func PrintCatalog(cmd *cobra.Command, values []map[string]interface{}) (bool, error) {
 	if !onAgentPlatform(cmd) {
-		return false
+		return false, nil
 	}
 	if output.IsMachineMode(cmd) {
 		out := make([]map[string]interface{}, 0, len(values))
@@ -52,8 +52,7 @@ func PrintCatalog(cmd *cobra.Command, values []map[string]interface{}) bool {
 			c["agent_platform"] = info
 			out = append(out, c)
 		}
-		_ = output.LocalResult(cmd, out)
-		return true
+		return true, output.LocalResult(cmd, out)
 	}
 	w := cmd.OutOrStdout()
 	last := ""
@@ -77,5 +76,5 @@ func PrintCatalog(cmd *cobra.Command, values []map[string]interface{}) bool {
 		fmt.Fprintf(w, "  %-42s %s\n", label, desc)
 		fmt.Fprintf(w, "  %-42s [%s]\n", "", statusText(id))
 	}
-	return true
+	return true, nil
 }

@@ -39,6 +39,10 @@ func runTTSGenerateContent(cmd *cobra.Command, model, text, style string, speech
 		return usageError("--voice-prompt is not available on Agent Platform",
 			"Use --voice with a prebuilt voice name (e.g. Kore, Puck)")
 	}
+	if name := customVoiceName(speech); name != "" {
+		return usageError(fmt.Sprintf("custom voice %q is only available on the Gemini API", name),
+			"Use a prebuilt voice name (e.g. Kore, Puck), or switch to the Gemini API with --backend gemini")
+	}
 	var warnings []string
 	for _, speaker := range absent {
 		warnings = append(warnings, fmt.Sprintf("speaker %q does not appear in the text", speaker))
@@ -108,6 +112,26 @@ func writeGenerateContentAudio(cmd *cobra.Command, model string, audio []byte, m
 		envelope["channels"] = channels
 	}
 	return path, envelope, nil
+}
+
+// customVoiceName は speech の中の voices API で作ったカスタム音声（voice_ で始まる ID）を返す。無ければ空。
+func customVoiceName(speech *interactions.SpeechConfigUnion) string {
+	var voices []*string
+	if speech.SpeakerConfig == nil {
+		for _, v := range speech.ArrayOfSpeechConfig {
+			voices = append(voices, v.Voice)
+		}
+	} else {
+		for _, sp := range speech.SpeakerConfig.Speakers {
+			voices = append(voices, sp.Voice)
+		}
+	}
+	for _, v := range voices {
+		if v != nil && strings.HasPrefix(*v, "voice_") {
+			return *v
+		}
+	}
+	return ""
 }
 
 // ttsGenerateContentBody は tts の入力と声の設定を generateContent の本文にする。

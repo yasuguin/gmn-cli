@@ -273,3 +273,30 @@ func TestPlusTTS_GeminiAPIのときは本家のままInteractionsに送る(t *te
 		t.Errorf("Interactions に送られていない: %v", stub.requestBody(t))
 	}
 }
+
+func TestPlusTTS_カスタム音声はAgentPlatformでは通信前にusageErrorで止まる(t *testing.T) {
+	for _, extra := range [][]string{
+		{"--voice", "voice_abc123"},
+		{"--multi-speaker", "Alice=Kore,Bob=voice_abc123"},
+	} {
+		stub := newGenerateContentStub(t, ttsResponse("audio/wav", []byte("RIFF")))
+		args := ttsVertexArgs(stub, extra...)
+		for i := range args {
+			if args[i] == "Hello from Agent Platform" {
+				args[i] = "Alice: hi! Bob: hello."
+			}
+		}
+		result := runPlus(t, t.TempDir(), nil, args...)
+		if exitCodeOf(result.err) != 2 {
+			t.Errorf("%v: exit = %d, want 2\n%s", extra, exitCodeOf(result.err), result.stderr)
+		}
+		if n := stub.requestCount(); n != 0 {
+			t.Errorf("%v: 通信した回数 = %d, want 0", extra, n)
+		}
+		for _, want := range []string{"voice_abc123", "Gemini API"} {
+			if !strings.Contains(result.stderr, want) {
+				t.Errorf("%v: エラーに %q が無い:\n%s", extra, want, result.stderr)
+			}
+		}
+	}
+}

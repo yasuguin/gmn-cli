@@ -172,3 +172,11 @@ func TestPlusモデル_modelsのカタログはAgentPlatform選択時だけ状�
 		t.Errorf("機械可読のカタログに agent_platform が無い: %v\n%s", machine.err, machine.stdout)
 	}
 }
+
+func TestPlusモデル_カタログの機械出力のエラーを捨てず終了コードに反映する(t *testing.T) {
+	result := runPlus(t, t.TempDir(), nil, "--no-interactive", "--no-keyring", "--backend", "vertex", "--project", "p",
+		"-o", "json", "--jq", `error("boom")`, "models")
+	if result.err == nil {
+		t.Fatalf("--jq の評価エラーが捨てられて成功した\n%s", result.stdout)
+	}
+}

@@ -101,8 +101,8 @@ func newModelsCatalogCmd() *cobra.Command {
 				{"value": "gemini-omni-1.1-flash", "description": "Our high-performance multimodal model designed for fast, conversational video generation, editing, and cinematic control.", "default": false, "group": "Video"},
 				{"value": "gemini-omni-flash-preview", "description": "Preview release of our multimodal model for conversational video generation, editing, and cinematic control.", "default": false, "group": "Video"},
 			}
-			if modelmap.PrintCatalog(cmd, values) { // plus: Agent Platform では各モデルの状態と読み替え先を足して出す
-				return nil
+			if handled, err := modelmap.PrintCatalog(cmd, values); handled || err != nil { // plus: Agent Platform では各モデルの状態と読み替え先を足して出す
+				return err
 			}
 			if output.IsMachineMode(cmd) {
 				return output.LocalResult(cmd, values)
