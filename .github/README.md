@@ -1,12 +1,20 @@
-# gemini-headless-cli
+# gmn — Gemini API and Agent Platform from the terminal
+
+[![Release](https://img.shields.io/github/v/release/yasuguin/gmn-cli?style=flat-square)](https://github.com/yasuguin/gmn-cli/releases/latest)
+[![License](https://img.shields.io/github/license/yasuguin/gmn-cli?style=flat-square)](../LICENSE)
+[![Homebrew](https://img.shields.io/badge/Homebrew-yasuguin%2Ftap-fbb040?style=flat-square&logo=homebrew)](https://github.com/yasuguin/homebrew-tap)
 
 [日本語](README.ja.md)
 
-A headless CLI for Gemini models, for agents, scripts, and CI — an unofficial fork of [google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli) that also targets Agent Platform. Not affiliated with Google.
+`gmn` is a one-shot command-line client that works with Gemini models through the Gemini API or Agent Platform (formerly Vertex AI). It is built for agents, scripts, and CI: it sends one request and returns the result. It does not edit files or run tools on its own, and it is not the interactive Gemini CLI agent.
 
-This is a one-shot command you call from a shell, not the interactive Gemini CLI agent, and not a wrapper around Gemini CLI's headless mode. It does not edit files or run tools on its own; it sends one request to a Gemini model and returns the result.
+```bash
+gmn generate "Write a haiku about APIs"
+gmn image "A friendly robot mascot" --out ./assets/
+gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
+```
 
-The command is `gemini-headless`. It runs next to the upstream `gemini-api` command without conflict. Upstream usage is documented in the [upstream README](https://github.com/google-gemini/gemini-api-cli#readme). This README covers only what the fork adds.
+`gmn` is an unofficial fork of [google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli) and is not affiliated with Google. It runs next to the upstream `gemini-api` command without conflict. Upstream usage is documented in the [upstream README](https://github.com/google-gemini/gemini-api-cli#readme); this README covers only what the fork adds.
 
 ## What is different
 
@@ -18,21 +26,21 @@ The command is `gemini-headless`. It runs next to the upstream `gemini-api` comm
 ## Install
 
 ```bash
-npx gemini-headless-cli --help          # or: pnpm dlx gemini-headless-cli --help
-uvx gemini-headless-cli --help          # installs gemini-headless and gemini-headless-cli
-brew install --cask yasuguin/tap/gemini-headless-cli   # macOS only
-curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-headless-cli/main/scripts/plus/install.sh | bash
+brew install --cask yasuguin/tap/gmn-cli   # macOS only
+npx gmn-cli --help          # or: pnpm dlx gmn-cli --help
+uvx gmn-cli --help          # installs gmn and gmn-cli
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
 
-The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gemini-headless-cli/releases) (tags `headless-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GEMINI_INSTALL_DIR` to choose the directory, and `GEMINI_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
+The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) (tags `gmn-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GEMINI_INSTALL_DIR` to choose the directory, and `GEMINI_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
 
 ## Quick start
 
 ### Gemini API
 
 ```bash
-export GEMINI_API_KEY=...        # or: gemini-headless configure
-gemini-headless generate "Write a haiku about APIs"
+export GEMINI_API_KEY=...        # or: gmn configure
+gmn generate "Write a haiku about APIs"
 ```
 
 ### Agent Platform
@@ -42,8 +50,8 @@ gcloud auth application-default login
 export GOOGLE_GENAI_USE_VERTEXAI=true
 export GOOGLE_CLOUD_PROJECT=my-project
 export GOOGLE_CLOUD_LOCATION=global
-gemini-headless whoami
-gemini-headless generate "Write a haiku about APIs"
+gmn whoami
+gmn generate "Write a haiku about APIs"
 ```
 
 Check `whoami` before a paid call. It shows the backend, project, and location, and where each came from.
@@ -54,7 +62,7 @@ Each setting is read in this order, and the first one set wins:
 
 1. Flag: `--backend vertex`, `--project`, `--location`
 2. Environment: `GOOGLE_GENAI_USE_VERTEXAI`, `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`
-3. Config file `~/.config/gemini-headless/config.yaml`
+3. Config file `~/.config/gmn/config.yaml`
 4. Default: `gemini` backend, location `global`
 
 ```yaml
@@ -100,18 +108,18 @@ Verified with the maintainer's smoke script on 2026-11-26 against the `global` l
 - With an explicit `--model` that Agent Platform does not serve, the command stops and lists alternatives. It does not switch models silently, so a change in cost or quality is visible.
 - Verified on Agent Platform (2026-11-26): `gemini-4-hydrogen` (default), `gemini-4-argon`, `gemini-4-carbon`, `gemini-4-neon`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash`.
 - Not served: `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-flash-latest`, `gemini-pro-latest`, `gemma-4-31b-it`.
-- `gemini-headless models` lists the offline catalog with each model's Agent Platform status.
+- `gmn models` lists the offline catalog with each model's Agent Platform status.
 
 ## Coexistence with upstream
 
-- Command: `gemini-headless` here, `gemini-api` upstream.
-- Config: `~/.config/gemini-headless/config.yaml` here, `~/.config/gemini-api/config.yaml` upstream.
+- Command: `gmn` here, `gemini-api` upstream.
+- Config: `~/.config/gmn/config.yaml` here, `~/.config/gemini-api/config.yaml` upstream.
 - Keychain service name differs.
 - Environment variables with the `GEMINI_` prefix (such as `GEMINI_API_KEY`) are shared by both.
 
 ## Following upstream
 
-The fork merges upstream releases with `scripts/plus/sync-upstream.sh`. The fork's version number is independent of upstream. `gemini-headless --version` also shows the upstream base version.
+The fork merges upstream releases with `scripts/plus/sync-upstream.sh`. The fork's version number is independent of upstream. `gmn --version` also shows the upstream base version.
 
 ## License
 

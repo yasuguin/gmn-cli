@@ -4,7 +4,7 @@
 //
 // 使い方: node packaging/npm/build.mjs --dist <goreleaser の dist> --out <空の出力先> --version 0.1.0
 //
-// 出力先には <out>/gemini-headless-cli（本体）と <out>/gemini-headless-cli-<os>-<arch>（OS 別）ができる。
+// 出力先には <out>/gmn-cli（本体）と <out>/gmn-cli-<os>-<arch>（OS 別）ができる。
 // 公開は release workflow が行う。このスクリプトは何も publish しない。
 import { spawnSync } from 'node:child_process';
 import { cpSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -15,9 +15,9 @@ import { SUPPORTED, binaryFileName, packageName } from './lib/platform.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
-const MAIN_NAME = 'gemini-headless-cli';
+const MAIN_NAME = 'gmn-cli';
 
-// goreleaser の name_template に合わせたアーカイブ名（例 gemini-headless-cli_Darwin_arm64.tar.gz）。
+// goreleaser の name_template に合わせたアーカイブ名（例 gmn-cli_Darwin_arm64.tar.gz）。
 const GORELEASER_OS = { darwin: 'Darwin', linux: 'Linux', win32: 'Windows' };
 const GORELEASER_ARCH = { x64: 'x86_64', arm64: 'arm64' };
 
@@ -33,9 +33,9 @@ function parseArgs(argv) {
   for (const k of ['dist', 'out', 'version']) {
     if (!args[k]) throw new Error(`--${k} が無い`);
   }
-  // 版は npm の semver として通る形だけ許す（例 0.1.0・0.1.0-rc.1）。headless-v は含めない。
+  // 版は npm の semver として通る形だけ許す（例 0.1.0・0.1.0-rc.1）。gmn-v は含めない。
   if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(args.version)) {
-    throw new Error(`--version が semver ではない: ${args.version}（headless-v は外す）`);
+    throw new Error(`--version が semver ではない: ${args.version}（gmn-v は外す）`);
   }
   return args;
 }
@@ -43,7 +43,7 @@ function parseArgs(argv) {
 function archivePath(dist, platform, arch) {
   const os = GORELEASER_OS[platform];
   const ext = platform === 'win32' ? 'zip' : 'tar.gz';
-  return join(dist, `gemini-headless-cli_${os}_${GORELEASER_ARCH[arch]}.${ext}`);
+  return join(dist, `gmn-cli_${os}_${GORELEASER_ARCH[arch]}.${ext}`);
 }
 
 // アーカイブを一時ディレクトリに展開して、実行ファイル 1 つを取り出す。
@@ -80,7 +80,7 @@ function writeJson(path, value) {
 function buildOsPackage(entry, { dist, out, version, scratch, license, readme }) {
   const name = packageName(entry.platform, entry.arch);
   const binName = binaryFileName(entry.platform);
-  const dir = join(out, `gemini-headless-cli-${entry.pkg}`);
+  const dir = join(out, `gmn-cli-${entry.pkg}`);
   mkdirSync(dir, { recursive: true });
 
   const src = extractBinary(archivePath(dist, entry.platform, entry.arch), binName, scratch);
@@ -92,9 +92,9 @@ function buildOsPackage(entry, { dist, out, version, scratch, license, readme })
   writeJson(join(dir, 'package.json'), {
     name,
     version,
-    description: 'Native binary of gemini-headless-cli (unofficial fork of google-gemini/gemini-api-cli). Not affiliated with Google.',
+    description: 'Native binary of gmn-cli (unofficial fork of google-gemini/gemini-api-cli). Not affiliated with Google.',
     license: 'Apache-2.0',
-    repository: { type: 'git', url: 'git+https://github.com/yasuguin/gemini-headless-cli.git' },
+    repository: { type: 'git', url: 'git+https://github.com/yasuguin/gmn-cli.git' },
     // os・cpu が一致する環境にだけ入る。ほかの環境では本体の optionalDependencies から外れる。
     os: [entry.platform],
     cpu: [entry.arch],
@@ -111,9 +111,9 @@ function buildMainPackage(optionalNames, { out, version, license, readme }) {
   cpSync(join(HERE, 'lib'), join(dir, 'lib'), { recursive: true });
   cpSync(license, join(dir, 'LICENSE'));
   cpSync(readme, join(dir, 'README.md'));
-  // 利用者向け skill は正本 skills/gemini-headless-cli/ からコピーする。手で二重管理しない。
+  // 利用者向け skill は正本 skills/gmn-cli/ からコピーする。手で二重管理しない。
   // skills CLI の experimental_sync は本体の skills/<name>/SKILL.md を見つけるので、この位置に置く。
-  cpSync(join(ROOT, 'skills', 'gemini-headless-cli'), join(dir, 'skills', 'gemini-headless-cli'), { recursive: true });
+  cpSync(join(ROOT, 'skills', 'gmn-cli'), join(dir, 'skills', 'gmn-cli'), { recursive: true });
 
   const template = JSON.parse(readFileSync(join(HERE, 'package.json'), 'utf8'));
   const optionalDependencies = Object.fromEntries(optionalNames.map((n) => [n, version]));
@@ -129,7 +129,7 @@ function main() {
     throw new Error(`出力先が空ではない: ${out}`);
   }
   mkdirSync(out, { recursive: true });
-  const scratch = mkdtempSync(join(tmpdir(), 'gemini-headless-npm-'));
+  const scratch = mkdtempSync(join(tmpdir(), 'gmn-npm-'));
   const common = {
     dist,
     out,

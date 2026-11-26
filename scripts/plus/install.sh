@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
 #
-# gemini-headless（fork）のインストールスクリプト。本家の scripts/install.sh を土台にし、次を変えている。
-#   - 取得元は fork の GitHub Releases（タグ headless-v<版>）
+# gmn（fork）のインストールスクリプト。本家の scripts/install.sh を土台にし、次を変えている。
+#   - 取得元は fork の GitHub Releases（タグ gmn-v<版>）
 #   - checksums.txt で照合し、一致しなければ何も入れずに止まる
-#   - 入れるファイル名は gemini-headless。公式の gemini-api は上書きしない
+#   - 入れるファイル名は gmn。公式の gemini-api は上書きしない
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-headless-cli/main/scripts/plus/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 #
 # Options:
 #   GEMINI_INSTALL_DIR - 入れ先（既定: 書けるなら /usr/local/bin、だめなら ~/.local/bin）
-#   GEMINI_VERSION     - 版（例 0.1.0 または headless-v0.1.0）。既定は latest
+#   GEMINI_VERSION     - 版（例 0.1.0 または gmn-v0.1.0）。既定は latest
 #
 # Windows は対象外。zip を Releases から手で取る。
 
 set -euo pipefail
 
-REPO="yasuguin/gemini-headless-cli"
-TAG_PREFIX="headless-v"
-BINARY_NAME="gemini-headless"
+REPO="yasuguin/gmn-cli"
+TAG_PREFIX="gmn-v"
+BINARY_NAME="gmn"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="$HOME/.local/bin"
 VERSION="${GEMINI_VERSION:-latest}"
-# GEMINI_HEADLESS_DOWNLOAD_BASE と GEMINI_HEADLESS_PLATFORM は scripts/plus/install_test.sh が
+# GMN_DOWNLOAD_BASE と GMN_PLATFORM は scripts/plus/install_test.sh が
 # ローカルの fixture を指すために使う。通常の利用では設定しない（既定は uname から決める）。
-DOWNLOAD_BASE="${GEMINI_HEADLESS_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
+DOWNLOAD_BASE="${GMN_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
 
 log_info() { echo "[INFO] $1"; }
 log_error() { echo "[ERROR] $1" >&2; }
 
 detect_platform() {
-  if [ -n "${GEMINI_HEADLESS_PLATFORM:-}" ]; then
-    echo "$GEMINI_HEADLESS_PLATFORM"
+  if [ -n "${GMN_PLATFORM:-}" ]; then
+    echo "$GMN_PLATFORM"
     return
   fi
   local os arch
@@ -110,7 +110,7 @@ main() {
   local platform tag archive base install_dir expected actual
   platform="$(detect_platform)"
   tag="$(resolve_tag)"
-  archive="gemini-headless-cli_${platform}.tar.gz"
+  archive="gmn-cli_${platform}.tar.gz"
   base="${DOWNLOAD_BASE}/${tag}"
   install_dir="$(get_install_dir)"
 

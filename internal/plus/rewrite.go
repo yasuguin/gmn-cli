@@ -18,7 +18,7 @@ func isNameByte(b byte) bool {
 	return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9' || b == '_' || b == '-'
 }
 
-// ReplaceCommandName は text 中のコマンド名 gemini-api を gemini-headless に置き換える。
+// ReplaceCommandName は text 中のコマンド名 gemini-api を gmn に置き換える。
 func ReplaceCommandName(text string) string {
 	return string(replaceCommandName(nil, []byte(text)))
 }

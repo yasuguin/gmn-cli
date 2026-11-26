@@ -1,12 +1,20 @@
-# gemini-headless-cli
+# gmn — ターミナルから Gemini API と Agent Platform を使う
+
+[![Release](https://img.shields.io/github/v/release/yasuguin/gmn-cli?style=flat-square)](https://github.com/yasuguin/gmn-cli/releases/latest)
+[![License](https://img.shields.io/github/license/yasuguin/gmn-cli?style=flat-square)](../LICENSE)
+[![Homebrew](https://img.shields.io/badge/Homebrew-yasuguin%2Ftap-fbb040?style=flat-square&logo=homebrew)](https://github.com/yasuguin/homebrew-tap)
 
 [English](README.md)
 
-エージェント、スクリプト、CI から Gemini のモデルを呼ぶための、ヘッドレスな CLI です。Agent Platform にも対応した非公式の fork です（[google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli)）。Google とは関係ありません。
+`gmn` は、Gemini API または Agent Platform（旧 Vertex AI）経由で Gemini のモデルを呼ぶ、ワンショットのコマンドラインクライアントです。エージェント、スクリプト、CI から使う前提で作っていて、リクエストを 1 回送って結果を返します。自分でファイルを編集したりツールを実行したりはせず、対話型の Gemini CLI エージェントでもありません。
 
-対話型の Gemini CLI エージェントではなく、Gemini CLI の headless mode を包むものでもありません。シェルから呼び出すワンショットのコマンドで、自分でファイルを編集したりツールを実行したりはせず、Gemini のモデルにリクエストを 1 回送って結果を返します。
+```bash
+gmn generate "Write a haiku about APIs"
+gmn image "A friendly robot mascot" --out ./assets/
+gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
+```
 
-コマンド名は `gemini-headless` で、upstream の `gemini-api` コマンドと競合せず併用できます。基本的な使い方は [upstream の README](https://github.com/google-gemini/gemini-api-cli#readme) を参照してください。この README では、本 fork で追加された点のみを説明します。
+`gmn` は [google-gemini/gemini-api-cli](https://github.com/google-gemini/gemini-api-cli) の非公式の fork で、Google とは関係ありません。upstream の `gemini-api` コマンドと競合せず併用できます。基本的な使い方は [upstream の README](https://github.com/google-gemini/gemini-api-cli#readme) を参照してください。この README では、本 fork で追加された点のみを説明します。
 
 ## 違い
 
@@ -18,21 +26,21 @@
 ## インストール
 
 ```bash
-npx gemini-headless-cli --help          # or: pnpm dlx gemini-headless-cli --help
-uvx gemini-headless-cli --help          # installs gemini-headless and gemini-headless-cli
-brew install --cask yasuguin/tap/gemini-headless-cli   # macOS only
-curl -fsSL https://raw.githubusercontent.com/yasuguin/gemini-headless-cli/main/scripts/plus/install.sh | bash
+brew install --cask yasuguin/tap/gmn-cli   # macOS only
+npx gmn-cli --help          # or: pnpm dlx gmn-cli --help
+uvx gmn-cli --help          # installs gmn and gmn-cli
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
 
-インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gemini-headless-cli/releases)（タグ `headless-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GEMINI_INSTALL_DIR` を、バージョンを固定するには `GEMINI_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
+インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GEMINI_INSTALL_DIR` を、バージョンを固定するには `GEMINI_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
 
 ## クイックスタート
 
 ### Gemini API
 
 ```bash
-export GEMINI_API_KEY=...        # or: gemini-headless configure
-gemini-headless generate "Write a haiku about APIs"
+export GEMINI_API_KEY=...        # or: gmn configure
+gmn generate "Write a haiku about APIs"
 ```
 
 ### Agent Platform
@@ -42,8 +50,8 @@ gcloud auth application-default login
 export GOOGLE_GENAI_USE_VERTEXAI=true
 export GOOGLE_CLOUD_PROJECT=my-project
 export GOOGLE_CLOUD_LOCATION=global
-gemini-headless whoami
-gemini-headless generate "Write a haiku about APIs"
+gmn whoami
+gmn generate "Write a haiku about APIs"
 ```
 
 課金が発生する呼び出しの前に `whoami` で確認してください。バックエンド、プロジェクト、ロケーションと、それぞれの参照元が表示されます。
@@ -54,7 +62,7 @@ gemini-headless generate "Write a haiku about APIs"
 
 1. フラグ: `--backend vertex`, `--project`, `--location`
 2. 環境変数: `GOOGLE_GENAI_USE_VERTEXAI`, `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`
-3. 設定ファイル: `~/.config/gemini-headless/config.yaml`
+3. 設定ファイル: `~/.config/gmn/config.yaml`
 4. デフォルト: `gemini` バックエンド、ロケーション `global`
 
 ```yaml
@@ -100,18 +108,18 @@ API キーは Agent Platform には送信されません。
 - Agent Platform で提供されていないモデルを `--model` で明示的に指定した場合、コマンドは停止し、代替モデルの一覧を表示します。コストや品質の変化に気づけるよう、暗黙的なモデルの切り替えは行いません。
 - Agent Platform で動作確認済み（2026-11-26）: `gemini-4-hydrogen`（デフォルト）, `gemini-4-argon`, `gemini-4-carbon`, `gemini-4-neon`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash`
 - 未提供: `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-flash-latest`, `gemini-pro-latest`, `gemma-4-31b-it`
-- `gemini-headless models` で、各モデルの Agent Platform 対応状況を含むオフラインカタログを一覧表示できます。
+- `gmn models` で、各モデルの Agent Platform 対応状況を含むオフラインカタログを一覧表示できます。
 
 ## upstream との共存
 
-- コマンド: 本ツールは `gemini-headless`、upstream は `gemini-api` です。
-- 設定ファイル: 本ツールは `~/.config/gemini-headless/config.yaml`、upstream は `~/.config/gemini-api/config.yaml` です。
+- コマンド: 本ツールは `gmn`、upstream は `gemini-api` です。
+- 設定ファイル: 本ツールは `~/.config/gmn/config.yaml`、upstream は `~/.config/gemini-api/config.yaml` です。
 - キーチェーンのサービス名も異なります。
 - `GEMINI_` プレフィックスの環境変数（`GEMINI_API_KEY` など）は両方で共有されます。
 
 ## upstream への追従
 
-本 fork は `scripts/plus/sync-upstream.sh` を使って upstream のリリースをマージしています。fork のバージョン番号は upstream とは独立しています。`gemini-headless --version` でベースとなった upstream のバージョンも確認できます。
+本 fork は `scripts/plus/sync-upstream.sh` を使って upstream のリリースをマージしています。fork のバージョン番号は upstream とは独立しています。`gmn --version` でベースとなった upstream のバージョンも確認できます。
 
 ## ライセンス
 

@@ -20,20 +20,20 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
-DIST_NAME = "gemini_headless_cli"  # wheel のファイル名に使う正規化された名前
-PROJECT_NAME = "gemini-headless-cli"
+DIST_NAME = "gmn_cli"  # wheel のファイル名に使う正規化された名前
+PROJECT_NAME = "gmn-cli"
 SUMMARY = "Unofficial fork of google-gemini/gemini-api-cli. Not affiliated with Google."
 
 # goreleaser のアーカイブ名（{Os}_{arch}）→ wheel の platform tag。
 # macOS は Go の既定の最低版（バイナリの LC_BUILD_VERSION minos が 13.0）に合わせる。
 # Linux は CGO_ENABLED=0 の静的リンクなので manylinux_2_17 を名乗っても glibc に依存しない。
 PLATFORMS = {
-    "Darwin_arm64": ("gemini-headless", "macosx_13_0_arm64"),
-    "Darwin_x86_64": ("gemini-headless", "macosx_13_0_x86_64"),
-    "Linux_x86_64": ("gemini-headless", "manylinux_2_17_x86_64.manylinux2014_x86_64"),
-    "Linux_arm64": ("gemini-headless", "manylinux_2_17_aarch64.manylinux2014_aarch64"),
-    "Windows_x86_64": ("gemini-headless.exe", "win_amd64"),
-    "Windows_arm64": ("gemini-headless.exe", "win_arm64"),
+    "Darwin_arm64": ("gmn", "macosx_13_0_arm64"),
+    "Darwin_x86_64": ("gmn", "macosx_13_0_x86_64"),
+    "Linux_x86_64": ("gmn", "manylinux_2_17_x86_64.manylinux2014_x86_64"),
+    "Linux_arm64": ("gmn", "manylinux_2_17_aarch64.manylinux2014_aarch64"),
+    "Windows_x86_64": ("gmn.exe", "win_amd64"),
+    "Windows_arm64": ("gmn.exe", "win_arm64"),
 }
 
 
@@ -58,7 +58,7 @@ def normalize_version(version: str) -> str:
 
 def archive_path(dist: Path, key: str) -> Path:
     ext = "zip" if key.startswith("Windows_") else "tar.gz"
-    return dist / f"gemini-headless-cli_{key}.{ext}"
+    return dist / f"gmn-cli_{key}.{ext}"
 
 
 def read_binary(archive: Path, binary_name: str) -> bytes:
@@ -93,7 +93,7 @@ def metadata(version: str, readme: str) -> str:
             "License-Expression: Apache-2.0",
             "License-File: LICENSE",
             "Requires-Python: >=3.9",
-            "Project-URL: Homepage, https://github.com/yasuguin/gemini-headless-cli",
+            "Project-URL: Homepage, https://github.com/yasuguin/gmn-cli",
             "Project-URL: Upstream, https://github.com/google-gemini/gemini-api-cli",
             "Description-Content-Type: text/markdown",
             "",
@@ -124,8 +124,8 @@ def build_one(
     ).encode()
     entry_points = (
         b"[console_scripts]\n"
-        b"gemini-headless = gemini_headless_cli:main\n"
-        b"gemini-headless-cli = gemini_headless_cli:main\n"
+        b"gmn = gmn_cli:main\n"
+        b"gmn-cli = gmn_cli:main\n"
     )
     meta = metadata(version, readme).encode()
 
@@ -164,7 +164,7 @@ def main() -> None:
     )
     parser.add_argument("--out", type=Path, required=True, help="wheel の出力先")
     parser.add_argument(
-        "--version", required=True, help="fork の版（headless-v を外したもの。例 0.1.0）"
+        "--version", required=True, help="fork の版（gmn-v を外したもの。例 0.1.0）"
     )
     parser.add_argument("--license", type=Path, default=ROOT / "LICENSE")
     parser.add_argument("--readme", type=Path, default=HERE / "README.md")

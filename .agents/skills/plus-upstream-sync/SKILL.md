@@ -1,6 +1,6 @@
 ---
 name: plus-upstream-sync
-description: fork（gemini-headless-cli）へ本家 google-gemini/gemini-api-cli の新しいリリースを取り込むとき、merge が衝突したとき、取り込み後の確認をするときに使う。保守者向けで、利用者向けではない。
+description: fork（gmn-cli）へ本家 google-gemini/gemini-api-cli の新しいリリースを取り込むとき、merge が衝突したとき、取り込み後の確認をするときに使う。保守者向けで、利用者向けではない。
 metadata:
   internal: true
 ---
@@ -39,6 +39,6 @@ git grep -h -F '// plus:' -- . ':(exclude)internal/plus' ':(exclude)scripts/plus
 
 ## merge 後に確かめること
 
-- `git tag -l 'v*'` が空（本家のタグは `refs/tags/upstream/` にだけ入る）。`headless-v*` のタグは変わっていない。
+- `git tag -l 'v*'` が空（本家のタグは `refs/tags/upstream/` にだけ入る）。`gmn-v*` のタグは変わっていない。
 - 上の印の比較で欠けた行が無い。
 - `go build ./...` と `go test ./... -count=1` が通る。

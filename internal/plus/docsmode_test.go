@@ -8,7 +8,7 @@ import (
 
 // 本家の構造に合わせた最小の木。tts の -v は --voice で、--version ではない。
 func docsTestRoot() *cobra.Command {
-	root := &cobra.Command{Use: "gemini-headless", Version: "0.0.0"}
+	root := &cobra.Command{Use: "gmn", Version: "0.0.0"}
 	tts := &cobra.Command{Use: "tts", Run: func(*cobra.Command, []string) {}}
 	tts.Flags().StringP("voice", "v", "", "")
 	generate := &cobra.Command{Use: "generate", Run: func(*cobra.Command, []string) {}}

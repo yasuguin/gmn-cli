@@ -1,11 +1,11 @@
-name: Release gemini-headless-cli
+name: Release gmn-cli
 
-# headless-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
+# gmn-v* のタグだけで動かす。本家の v* タグの release.yaml とは名前空間を分ける。
 # GitHub Releases は goreleaser job、PyPI は pypi job、npm は npm job。
 on:
   push:
     tags:
-      - "headless-v*"
+      - "gmn-v*"
 
 permissions:
   contents: write
@@ -46,12 +46,12 @@ jobs:
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
 
       # goreleaser は --skip=validate で版を解析しないため prerelease: auto が効かない。版に - があれば付け直す。
-      # タグの接頭辞 headless-v 自体に - があるので、判定は接頭辞を外した版で行う（タグ全体で見ると正式版も prerelease になる）。
+      # タグの接頭辞 gmn-v 自体に - があるので、判定は接頭辞を外した版で行う（タグ全体で見ると正式版も prerelease になる）。
       - name: Mark GitHub Release as prerelease
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          version="${GITHUB_REF_NAME#headless-v}"
+          version="${GITHUB_REF_NAME#gmn-v}"
           case "$version" in
             *-*) gh release edit "$GITHUB_REF_NAME" --prerelease ;;
             *) echo "正式版 ${version} なので prerelease にしない" ;;
@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: release-headless-artifacts
+          name: release-gmn-artifacts
           path: |
             dist/
             !dist/*.txt
@@ -73,7 +73,7 @@ jobs:
     # trusted publishing の対象。environment `pypi` は GitHub の Settings で作る（保守者が手で行う）。
     environment:
       name: pypi
-      url: https://pypi.org/project/gemini-headless-cli/
+      url: https://pypi.org/project/gmn-cli/
     permissions:
       # PyPI の trusted publishing（OIDC）に必要。API token は使わない。
       id-token: write
@@ -85,7 +85,7 @@ jobs:
       - name: Download goreleaser artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: release-headless-artifacts
+          name: release-gmn-artifacts
           path: ${{ runner.temp }}/dist
 
       - name: Setup uv
@@ -98,7 +98,7 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#headless-v}"
+          version="${PLUS_VERSION#gmn-v}"
           uv run --no-project packaging/pypi/build_wheels.py \
             --dist "${{ runner.temp }}/dist" \
             --out "${{ runner.temp }}/wheels" \
@@ -109,12 +109,12 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#headless-v}"
+          version="${PLUS_VERSION#gmn-v}"
           wheel=$(ls "${{ runner.temp }}"/wheels/*manylinux_2_17_x86_64*.whl)
-          out=$(uvx --from "$wheel" gemini-headless-cli --version | head -n 1)
+          out=$(uvx --from "$wheel" gmn-cli --version | head -n 1)
           echo "$out"
           case "$out" in
-            "gemini-headless ${version} "*) ;;
+            "gmn ${version} "*) ;;
             *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
           esac
 
@@ -132,7 +132,7 @@ jobs:
     # npmjs.com 側の trusted publisher の environment 欄は `npm` にそろえる。
     environment:
       name: npm
-      url: https://www.npmjs.com/package/gemini-headless-cli
+      url: https://www.npmjs.com/package/gmn-cli
     permissions:
       # npm の trusted publishing（OIDC）に必要。NPM_TOKEN は使わない。--provenance は npm が GitHub Actions で既定で付けるが、明示する。
       id-token: write
@@ -144,7 +144,7 @@ jobs:
       - name: Download goreleaser artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: release-headless-artifacts
+          name: release-gmn-artifacts
           path: ${{ runner.temp }}/dist
 
       # npm の trusted publishing は npm CLI 11.5.1 以上が必要（https://docs.npmjs.com/trusted-publishers）。
@@ -169,7 +169,7 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#headless-v}"
+          version="${PLUS_VERSION#gmn-v}"
           node packaging/npm/build.mjs \
             --dist "${{ runner.temp }}/dist" \
             --out "${{ runner.temp }}/npm" \
@@ -180,11 +180,11 @@ jobs:
         env:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
-          version="${PLUS_VERSION#headless-v}"
-          out=$("${{ runner.temp }}/npm/gemini-headless-cli-linux-x64/gemini-headless" --version | head -n 1)
+          version="${PLUS_VERSION#gmn-v}"
+          out=$("${{ runner.temp }}/npm/gmn-cli-linux-x64/gmn" --version | head -n 1)
           echo "$out"
           case "$out" in
-            "gemini-headless ${version} "*) ;;
+            "gmn ${version} "*) ;;
             *) printf '::error::--version が tag の版 %s と違う\n' "$version"; exit 1 ;;
           esac
 
@@ -200,7 +200,7 @@ jobs:
           PLUS_VERSION: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          version="${PLUS_VERSION#headless-v}"
+          version="${PLUS_VERSION#gmn-v}"
           case "$version" in
             *-*) dist_tag=next ;;
             *) dist_tag=latest ;;
@@ -213,10 +213,10 @@ jobs:
             printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" >"$npmrc"
             export NPM_CONFIG_USERCONFIG="$npmrc"
           fi
-          for pkg in gemini-headless-cli-darwin-arm64 gemini-headless-cli-darwin-x64 \
-            gemini-headless-cli-linux-arm64 gemini-headless-cli-linux-x64 \
-            gemini-headless-cli-win32-arm64 gemini-headless-cli-win32-x64 \
-            gemini-headless-cli; do
+          for pkg in gmn-cli-darwin-arm64 gmn-cli-darwin-x64 \
+            gmn-cli-linux-arm64 gmn-cli-linux-x64 \
+            gmn-cli-win32-arm64 gmn-cli-win32-x64 \
+            gmn-cli; do
             # ディレクトリ名はスコープを含まないので、公開済みの判定は package.json の name で行う
             # （OS 別は @yasuguin/ 付き。ディレクトリ名で引くと、同名のスコープなしパッケージを見てしまう）。
             name=$(node -p "require('${{ runner.temp }}/npm/$pkg/package.json').name")

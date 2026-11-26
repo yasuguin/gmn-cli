@@ -10,12 +10,12 @@ const { run } = require('../lib/launcher');
 test('対応する 6 種の OS・arch は OS 別パッケージの実行ファイルを返す', () => {
   const resolve = (id) => `/fake/node_modules/${id}`;
   const cases = [
-    ['darwin', 'arm64', '@yasuguin/gemini-headless-cli-darwin-arm64/gemini-headless'],
-    ['darwin', 'x64', '@yasuguin/gemini-headless-cli-darwin-x64/gemini-headless'],
-    ['linux', 'arm64', '@yasuguin/gemini-headless-cli-linux-arm64/gemini-headless'],
-    ['linux', 'x64', '@yasuguin/gemini-headless-cli-linux-x64/gemini-headless'],
-    ['win32', 'arm64', '@yasuguin/gemini-headless-cli-win32-arm64/gemini-headless.exe'],
-    ['win32', 'x64', '@yasuguin/gemini-headless-cli-win32-x64/gemini-headless.exe'],
+    ['darwin', 'arm64', '@yasuguin/gmn-cli-darwin-arm64/gmn'],
+    ['darwin', 'x64', '@yasuguin/gmn-cli-darwin-x64/gmn'],
+    ['linux', 'arm64', '@yasuguin/gmn-cli-linux-arm64/gmn'],
+    ['linux', 'x64', '@yasuguin/gmn-cli-linux-x64/gmn'],
+    ['win32', 'arm64', '@yasuguin/gmn-cli-win32-arm64/gmn.exe'],
+    ['win32', 'x64', '@yasuguin/gmn-cli-win32-x64/gmn.exe'],
   ];
   assert.equal(SUPPORTED.length, 6);
   for (const [platform, arch, id] of cases) {
@@ -47,7 +47,7 @@ test('対応する OS でもパッケージが入っていなければ入れ直�
     throw err;
   };
   const result = resolveBinary('linux', 'x64', resolve);
-  assert.match(result.error, /@yasuguin\/gemini-headless-cli-linux-x64 が入っていない/);
+  assert.match(result.error, /@yasuguin\/gmn-cli-linux-x64 が入っていない/);
 });
 
 test('run は子プロセスの終了コードをそのまま返す', () => {
@@ -68,7 +68,7 @@ test('run は子プロセスの終了コードをそのまま返す', () => {
     stderr,
   });
   assert.deepEqual(calls[0], {
-    path: '/fake/@yasuguin/gemini-headless-cli-linux-x64/gemini-headless',
+    path: '/fake/@yasuguin/gmn-cli-linux-x64/gmn',
     argv: ['--version'],
     stdio: 'inherit',
   });

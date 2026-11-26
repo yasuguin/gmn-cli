@@ -1,19 +1,19 @@
-# gemini-headless-cli
+# gmn-cli
 
-Unofficial fork of google-gemini/gemini-api-cli for headless use. Not affiliated with Google.
+Unofficial fork of google-gemini/gemini-api-cli for agents, scripts, and CI. Not affiliated with Google.
 
-The `gemini-headless` command is the fork's CLI. It is installed side by side with the official `gemini-api` command and does not replace it.
+The `gmn` command is the fork's CLI. It is installed side by side with the official `gemini-api` command and does not replace it.
 
 ## Usage
 
 ```sh
-npx gemini-headless-cli --version
-pnpm dlx gemini-headless-cli --version
-npm install -g gemini-headless-cli && gemini-headless --version
+npx gmn-cli --version
+pnpm dlx gmn-cli --version
+npm install -g gmn-cli && gmn --version
 ```
 
-This package has no install scripts. The native binary for your OS and CPU comes from one of the `@yasuguin/gemini-headless-cli-<os>-<arch>` packages listed in `optionalDependencies`.
+This package has no install scripts. The native binary for your OS and CPU comes from one of the `@yasuguin/gmn-cli-<os>-<arch>` packages listed in `optionalDependencies`.
 
 Supported: darwin-arm64, darwin-x64, linux-arm64, linux-x64, win32-arm64, win32-x64.
 
-Source and issues: https://github.com/yasuguin/gemini-headless-cli
+Source and issues: https://github.com/yasuguin/gmn-cli

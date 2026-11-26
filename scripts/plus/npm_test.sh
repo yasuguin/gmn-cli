@@ -9,7 +9,7 @@ set -euo pipefail
 
 version="${1:-0.1.0}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-work="$(mktemp -d "${TMPDIR:-/tmp}/gemini-headless-npm-test.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/gmn-npm-test.XXXXXX")"
 trap 'rm -rf -- "$work"' EXIT
 
 fail() {
@@ -47,17 +47,17 @@ case "$(uname -m)" in
   x86_64) arch=x64 ;;
   *) fail "この arch では確かめられない: $(uname -m)" ;;
 esac
-native_name="@yasuguin/gemini-headless-cli-${os}-${arch}"
-native_dir="$pkgs/gemini-headless-cli-${os}-${arch}"
-[ -x "$native_dir/gemini-headless" ] || fail "$native_dir/gemini-headless が実行可能でない"
+native_name="@yasuguin/gmn-cli-${os}-${arch}"
+native_dir="$pkgs/gmn-cli-${os}-${arch}"
+[ -x "$native_dir/gmn" ] || fail "$native_dir/gmn が実行可能でない"
 
 # 4. 本体と自分の OS 用パッケージを pnpm pack する。
 tarballs="$work/tarballs"
 mkdir -p "$tarballs"
-(cd "$pkgs/gemini-headless-cli" && pnpm pack --pack-destination "$tarballs" >/dev/null)
+(cd "$pkgs/gmn-cli" && pnpm pack --pack-destination "$tarballs" >/dev/null)
 (cd "$native_dir" && pnpm pack --pack-destination "$tarballs" >/dev/null)
-main_tgz="$(ls "$tarballs"/gemini-headless-cli-*.tgz)"
-native_tgz="$(ls "$tarballs"/yasuguin-gemini-headless-cli-"${os}-${arch}"-*.tgz)"
+main_tgz="$(ls "$tarballs"/gmn-cli-*.tgz)"
+native_tgz="$(ls "$tarballs"/yasuguin-gmn-cli-"${os}-${arch}"-*.tgz)"
 [ -f "$main_tgz" ] || fail "本体の tgz が無い"
 [ -f "$native_tgz" ] || fail "OS 用の tgz が無い"
 echo "ok: pnpm pack の tgz を作った"
@@ -71,7 +71,7 @@ cat >"$proj/package.json" <<JSON
   "name": "consumer",
   "private": true,
   "dependencies": {
-    "gemini-headless-cli": "file:$main_tgz"
+    "gmn-cli": "file:$main_tgz"
   }
 }
 JSON
@@ -94,23 +94,23 @@ esac
 echo "ok: pnpm@${pnpm_version} install（既定の lifecycle script 停止のまま）"
 
 # pnpm は OS 用パッケージを .pnpm の仮想ストアに置き、本体からだけ解決できる場所に張る。トップレベルには出ない。
-native_store="$(find "$proj/node_modules/.pnpm" -maxdepth 1 -name "@yasuguin+gemini-headless-cli-${os}-${arch}@*" | head -n 1)"
+native_store="$(find "$proj/node_modules/.pnpm" -maxdepth 1 -name "@yasuguin+gmn-cli-${os}-${arch}@*" | head -n 1)"
 [ -n "$native_store" ] || fail "OS 用パッケージが入っていない: $native_name"
 
 # 6. 2 つのコマンドの --version が、直接実行した OS 用バイナリと同じであることを見る。
-expected="$("$native_dir/gemini-headless" --version | head -n 1)"
+expected="$("$native_dir/gmn" --version | head -n 1)"
 case "$expected" in
-  "gemini-headless ${version} "*) ;;
+  "gmn ${version} "*) ;;
   *) fail "直接実行の --version が期待と違う: $expected" ;;
 esac
-for cmd in gemini-headless gemini-headless-cli; do
+for cmd in gmn gmn-cli; do
   got="$(pnpm10 exec "$cmd" --version | head -n 1)"
   [ "$got" = "$expected" ] || fail "$cmd --version が違う: got='$got' want='$expected'"
   echo "ok: $cmd --version -> $got"
 done
 
 # 7. 同梱の skill が正本と同じ内容であること。
-diff -r "$root/skills/gemini-headless-cli" "$proj/node_modules/gemini-headless-cli/skills/gemini-headless-cli" >/dev/null \
+diff -r "$root/skills/gmn-cli" "$proj/node_modules/gmn-cli/skills/gmn-cli" >/dev/null \
   || fail "同梱の skill が正本と違う"
 echo "ok: 同梱の skill は正本と同じ"
 

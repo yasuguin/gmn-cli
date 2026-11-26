@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// 利用者向けの文書（skill と README）の ```bash ブロックに出る gemini-headless の呼び出しが、
+// 利用者向けの文書（skill と README）の ```bash ブロックに出る gmn の呼び出しが、
 // 実在するコマンドパスと実在するフラグを指すことを確かめる。実行はしない（ネットワークに出ない）。
 // 文書だけ先に直して CLI を直し忘れる、またはその逆を防ぐ。
 //
@@ -22,12 +22,12 @@ import (
 
 // plusDocsFiles は検査対象の文書（repo ルートからの相対パス）。
 var plusDocsFiles = []string{
-	"skills/gemini-headless-cli/SKILL.md",
+	"skills/gmn-cli/SKILL.md",
 	".github/README.md",
 	".github/README.ja.md",
 }
 
-const plusCLIName = "gemini-headless"
+const plusCLIName = "gmn"
 
 type docExample struct {
 	file string
@@ -55,7 +55,7 @@ func TestPlusDocsバッシュブロックのコマンドは実在するコマン
 		examples = append(examples, collectPlusDocExamples(t, path, rel)...)
 	}
 	// skill と英語版 README は必ず例を持つ。空なら抽出が壊れている。
-	for _, rel := range []string{"skills/gemini-headless-cli/SKILL.md", ".github/README.md"} {
+	for _, rel := range []string{"skills/gmn-cli/SKILL.md", ".github/README.md"} {
 		n := 0
 		for _, ex := range examples {
 			if ex.file == rel {
@@ -63,7 +63,7 @@ func TestPlusDocsバッシュブロックのコマンドは実在するコマン
 			}
 		}
 		if n == 0 {
-			t.Fatalf("%s に検査対象の gemini-headless の例が無い", rel)
+			t.Fatalf("%s に検査対象の gmn の例が無い", rel)
 		}
 	}
 
@@ -107,10 +107,10 @@ func TestPlusDocsSkillのnameはディレクトリ名と一致する(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	body := readFileOrFatal(t, filepath.Join(root, "skills", "gemini-headless-cli", "SKILL.md"))
+	body := readFileOrFatal(t, filepath.Join(root, "skills", "gmn-cli", "SKILL.md"))
 	m := regexp.MustCompile(`(?m)^name:\s*(\S+)\s*$`).FindStringSubmatch(body)
-	if m == nil || m[1] != "gemini-headless-cli" {
-		t.Errorf("SKILL.md の frontmatter の name が gemini-headless-cli ではない: %v", m)
+	if m == nil || m[1] != "gmn-cli" {
+		t.Errorf("SKILL.md の frontmatter の name が gmn-cli ではない: %v", m)
 	}
 }
 

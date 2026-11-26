@@ -11,7 +11,7 @@ const SUPPORTED = [
   { platform: 'win32', arch: 'x64', pkg: 'win32-x64' },
 ];
 
-const SCOPE = '@yasuguin/gemini-headless-cli';
+const SCOPE = '@yasuguin/gmn-cli';
 
 function packageName(platform, arch) {
   const entry = SUPPORTED.find((e) => e.platform === platform && e.arch === arch);
@@ -19,7 +19,7 @@ function packageName(platform, arch) {
 }
 
 function binaryFileName(platform) {
-  return platform === 'win32' ? 'gemini-headless.exe' : 'gemini-headless';
+  return platform === 'win32' ? 'gmn.exe' : 'gmn';
 }
 
 // Node の require.resolve で OS 別パッケージの場所を探す。入っていなければ null を返す。
@@ -35,7 +35,7 @@ function resolveBinary(platform, arch, resolve = require.resolve) {
     if (err && err.code === 'MODULE_NOT_FOUND') {
       return {
         error:
-          `gemini-headless: ${name} が入っていない。` +
+          `gmn: ${name} が入っていない。` +
           ' optionalDependencies の取得が止められていないか（--no-optional など）確かめ、' +
           'npm・pnpm・yarn で入れ直す。',
       };
@@ -47,9 +47,9 @@ function resolveBinary(platform, arch, resolve = require.resolve) {
 function unsupportedMessage(platform, arch) {
   const lines = SUPPORTED.map((e) => `  ${e.platform}-${e.arch}`);
   return [
-    `gemini-headless: ${platform}-${arch} は対応していない。対応表:`,
+    `gmn: ${platform}-${arch} は対応していない。対応表:`,
     ...lines,
-    'ほかの環境では、GitHub Releases の tar.gz・zip か PyPI 版（gemini-headless-cli）を使う。',
+    'ほかの環境では、GitHub Releases の tar.gz・zip か PyPI 版（gmn-cli）を使う。',
   ].join('\n');
 }
 

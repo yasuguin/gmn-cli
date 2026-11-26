@@ -79,19 +79,19 @@ if [ "${SMOKE_DRY_RUN:-}" = 1 ]; then
 fi
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-work="$(mktemp -d "${TMPDIR:-/tmp}/gemini-headless-smoke.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/gmn-smoke.XXXXXX")"
 logdir="$work/logs"
 probedir="$work/probe"
 assets="$work/assets"
 out_dir="$work/out"
 bin_dir="$work/bin"
 mkdir -p "$logdir" "$probedir" "$assets" "$out_dir" "$bin_dir"
-bin="$bin_dir/gemini-headless"
+bin="$bin_dir/gmn"
 
 real_home="$HOME"
 
 # ビルドは install せず一時ディレクトリへ出す。ビルドだけは実ホームのまま回す（Go のキャッシュ用）。
-if ! (cd "$root" && go build -o "$bin" ./cmd/gemini-headless) >"$logdir/build.log" 2>&1; then
+if ! (cd "$root" && go build -o "$bin" ./cmd/gmn) >"$logdir/build.log" 2>&1; then
   echo "ビルドに失敗した。ログ: $logdir/build.log" >&2
   exit 1
 fi

@@ -1,20 +1,20 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# fork（gemini-headless）用のリリース設定。本家の .goreleaser.yaml とは別ファイルで、本家の設定は変えない。
-# タグは headless-v0.1.0 形式。GoReleaser OSS は monorepo.tag_prefix（Pro 限定）を使えない。
-# 版は .Tag から "headless-v" を trimprefix で外して得る（ldflags の plus.Version）。
+# fork（gmn）用のリリース設定。本家の .goreleaser.yaml とは別ファイルで、本家の設定は変えない。
+# タグは gmn-v0.1.0 形式。GoReleaser OSS は monorepo.tag_prefix（Pro 限定）を使えない。
+# 版は .Tag から "gmn-v" を trimprefix で外して得る（ldflags の plus.Version）。
 # 現在のタグを semver として解析する検査は --skip=validate でだけ外せる（release workflow と snapshot が付ける）。
 # そのため ctx.Semver は空になり、prerelease: auto・skip_upload: auto は常に正式版扱いになる。
 # prerelease は release workflow が gh release edit で付け、cask は skip_upload のテンプレートで判定する。
 version: 2
 
-project_name: gemini-headless-cli
+project_name: gmn-cli
 
 # 本家の .goreleaser.yaml は before に go mod tidy を置くが、snapshot で go.mod を書き換えないよう置かない。
 
 builds:
-  - id: gemini-headless
-    main: ./cmd/gemini-headless
-    binary: gemini-headless
+  - id: gmn
+    main: ./cmd/gmn
+    binary: gmn
     env:
       - CGO_ENABLED=0
     goos:
@@ -27,10 +27,10 @@ builds:
     ldflags:
       - -s -w
       # plus: fork の版は internal/plus の Version に入れる（本家の main.version は使わない）
-      - -X github.com/google-gemini/gemini-api-cli/internal/plus.Version={{ trimprefix .Tag "headless-v" }}
+      - -X github.com/google-gemini/gemini-api-cli/internal/plus.Version={{ trimprefix .Tag "gmn-v" }}
 
 archives:
-  - id: gemini-headless
+  - id: gmn
     formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_
@@ -49,11 +49,11 @@ archives:
 # Homebrew: GoReleaser v2.10 で brews（Formula）は deprecated、後継の homebrew_casks を使う。
 # CLI のバイナリは binaries で入れられる。cask は macOS 専用（Linux の Homebrew には出さない）。
 homebrew_casks:
-  - name: gemini-headless-cli
+  - name: gmn-cli
     ids:
-      - gemini-headless
+      - gmn
     binaries:
-      - gemini-headless
+      - gmn
     # バイナリは Apple の公証を受けていない（ad-hoc 署名だけ）。brew が付ける com.apple.quarantine が残ると
     # Gatekeeper が「開いていません」と出して起動を拒否するので、入れた後に外す。
     # 公証すれば要らなくなるが、Apple Developer Program が要るので今は選ばない（#19）。
@@ -63,9 +63,9 @@ homebrew_casks:
       post:
         install_steps: |
           on_macos do
-            run "/usr/bin/xattr", args: ["-d", "com.apple.quarantine", "gemini-headless"], chdir: ".", must_succeed: false
+            run "/usr/bin/xattr", args: ["-d", "com.apple.quarantine", "gmn"], chdir: ".", must_succeed: false
           end
-    homepage: https://github.com/yasuguin/gemini-headless-cli
+    homepage: https://github.com/yasuguin/gmn-cli
     description: "Unofficial fork of google-gemini/gemini-api-cli (Gemini API and Agent Platform). Not affiliated with Google."
     repository:
       owner: yasuguin
@@ -74,8 +74,8 @@ homebrew_casks:
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Casks
     # ctx.Semver が空なので auto は効かない。版に - があるプレリリースは tap に出さない。
-    # タグの接頭辞 headless-v 自体に - があるので、判定は接頭辞を外した版で行う。
-    skip_upload: '{{ if contains (trimprefix .Tag "headless-v") "-" }}true{{ else }}false{{ end }}'
+    # タグの接頭辞 gmn-v 自体に - があるので、判定は接頭辞を外した版で行う。
+    skip_upload: '{{ if contains (trimprefix .Tag "gmn-v") "-" }}true{{ else }}false{{ end }}'
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
@@ -84,12 +84,12 @@ homebrew_casks:
 release:
   github:
     owner: yasuguin
-    name: gemini-headless-cli
+    name: gmn-cli
   draft: false
   prerelease: auto
   mode: append
   # PLUS_BASE_VERSION は release workflow と scripts/plus/release-snapshot.sh が internal/cli/version.go から渡す。
-  # GitHub Release の tag 名は {{ .Tag }}（headless-v0.1.0）のまま。本家の v* タグは作らない。
+  # GitHub Release の tag 名は {{ .Tag }}（gmn-v0.1.0）のまま。本家の v* タグは作らない。
   header: |
     Unofficial fork of google-gemini/gemini-api-cli. Not affiliated with Google.
 

@@ -1,4 +1,4 @@
-// Package plus は fork（gemini-headless）の独自挙動をまとめる。
+// Package plus は fork（gmn）の独自挙動をまとめる。
 //
 // 本家のファイルには呼び出す行だけを足し、その行に "// plus:" のコメントを付ける。
 // 本家の cmd/gemini-api では Enable が呼ばれないので、挙動は本家のまま変わらない。
@@ -9,7 +9,7 @@ import (
 )
 
 // Name は fork のコマンド名。公式の gemini-api と並べて入れても混ざらないようにする。
-const Name = "gemini-headless"
+const Name = "gmn"
 
 // Version は fork の版。リリース時は ldflags の -X で上書きする。
 var Version = "0.1.0-dev"
@@ -23,7 +23,7 @@ const baseProject = "gemini-api-cli"
 
 var enabled atomic.Bool
 
-// Enable は fork の挙動を有効にする。cmd/gemini-headless だけが呼ぶ。
+// Enable は fork の挙動を有効にする。cmd/gmn だけが呼ぶ。
 func Enable() { enabled.Store(true) }
 
 // Enabled は fork の挙動が有効かを返す。

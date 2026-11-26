@@ -1,4 +1,4 @@
-"""fork（gemini-headless）の Go バイナリを呼ぶ薄いラッパー。
+"""fork（gmn）の Go バイナリを呼ぶ薄いラッパー。
 
 wheel の中の _bin/ に OS・arch ごとのバイナリが入っている。このモジュールは引数をそのまま渡すだけで、
 --version や終了コードの扱いは Go 側に任せる。
@@ -9,13 +9,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-_BINARY_NAME = "gemini-headless.exe" if os.name == "nt" else "gemini-headless"
+_BINARY_NAME = "gmn.exe" if os.name == "nt" else "gmn"
 
 
 def _binary_path() -> str:
     path = Path(__file__).resolve().parent / "_bin" / _BINARY_NAME
     if not path.is_file():
-        sys.exit(f"gemini-headless: バイナリが見つからない: {path}")
+        sys.exit(f"gmn: バイナリが見つからない: {path}")
     return str(path)
 
 

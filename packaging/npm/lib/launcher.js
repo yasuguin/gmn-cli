@@ -37,7 +37,7 @@ function run(argv, deps = {}) {
 
   child.on('error', (err) => {
     cleanup();
-    stderr.write(`gemini-headless: 起動できない: ${err.message}\n`);
+    stderr.write(`gmn: 起動できない: ${err.message}\n`);
     exit(1);
   });
   child.on('exit', (code, signal) => {

@@ -30,7 +30,7 @@ class NormalizeVersionTest(unittest.TestCase):
                 self.assertEqual(normalize_version(given), want)
 
     def test_PEP440にできない版は止める(self):
-        for bad in ["v0.1.0", "headless-v0.1.0", "0.1", "0.1.0-next", "0.1.0-rc", "0.1.0+build", "0.1.0-rc.1.2", ""]:
+        for bad in ["v0.1.0", "gmn-v0.1.0", "0.1", "0.1.0-next", "0.1.0-rc", "0.1.0+build", "0.1.0-rc.1.2", ""]:
             with self.subTest(bad):
                 with self.assertRaises(SystemExit):
                     normalize_version(bad)

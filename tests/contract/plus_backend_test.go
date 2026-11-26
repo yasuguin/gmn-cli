@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// gemini-headless の接続先（backend）の契約。Gemini API と Agent Platform（旧 Vertex AI）の切り替えを固定する。
+// gmn の接続先（backend）の契約。Gemini API と Agent Platform（旧 Vertex AI）の切り替えを固定する。
 
 // dryRunURL は generate --dry-run が示すリクエスト URL を返す。
 func dryRunURL(t *testing.T, home string, env map[string]string, args ...string) string {
@@ -36,7 +36,7 @@ func dryRunURL(t *testing.T, home string, env map[string]string, args ...string)
 
 func writePlusConfig(t *testing.T, home, body string) {
 	t.Helper()
-	dir := filepath.Join(home, ".config", "gemini-headless")
+	dir := filepath.Join(home, ".config", "gmn")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func TestPlusBackendVertexでprojectが無いと設定方法を示して終了�
 	if code := exitCodeOf(result.err); code != 2 {
 		t.Errorf("終了コード = %d, want 2\n%s", code, result.stderr)
 	}
-	for _, want := range []string{"--project", "GOOGLE_CLOUD_PROJECT", "gemini-headless"} {
+	for _, want := range []string{"--project", "GOOGLE_CLOUD_PROJECT", "gmn"} {
 		if !strings.Contains(result.stderr, want) {
 			t.Errorf("エラーに %q が無い:\n%s", want, result.stderr)
 		}

@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// gemini-headless の models list・get の契約。Agent Platform では公開モデルの一覧（publishers/google/models）に送り、
+// gmn の models list・get の契約。Agent Platform では公開モデルの一覧（publishers/google/models）に送り、
 // 応答を Gemini API の models の形に写す。Gemini API のときは本家の挙動のまま。
 
 // modelsStub は受け取ったリクエストを記録し、パスごとに応答を返すスタブ。

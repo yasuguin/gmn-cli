@@ -10,10 +10,10 @@ import (
 
 func TestReplaceCommandName(t *testing.T) {
 	cases := []struct{ name, in, want string }{
-		{"コマンド名", `Run: gemini-api configure`, `Run: gemini-headless configure`},
-		{"引用符内", `"gemini-api whoami"`, `"gemini-headless whoami"`},
-		{"文末のピリオド", `use gemini-api.`, `use gemini-headless.`},
-		{"設定ファイルの場所", `~/.config/gemini-api/config.yaml`, `~/.config/gemini-headless/config.yaml`},
+		{"コマンド名", `Run: gemini-api configure`, `Run: gmn configure`},
+		{"引用符内", `"gemini-api whoami"`, `"gmn whoami"`},
+		{"文末のピリオド", `use gemini-api.`, `use gmn.`},
+		{"設定ファイルの場所", `~/.config/gemini-api/config.yaml`, `~/.config/gmn/config.yaml`},
 		{"リポジトリ名は対象外", `gemini-api-cli`, `gemini-api-cli`},
 		{"URL は対象外", `https://github.com/google-gemini/gemini-api`, `https://github.com/google-gemini/gemini-api`},
 		{"go install のパスは対象外", `./cmd/gemini-api`, `./cmd/gemini-api`},
