@@ -11,12 +11,13 @@ metadata:
 
 ## いつ使うか
 
-- 週 1 回の workflow `plus-upstream-watch` が「upstream vX.Y.Z を取り込む」issue を立てたとき。
+- 週 1 回の workflow `plus-upstream-watch` は、本家の新しいリリースを自動で取り込みの PR（`chore(upstream): 本家 vX.Y.Z を取り込む`）にする。PR の CI が通れば、**merge commit で**マージする（squash しない）。
+- 自動の取り込みが衝突したときは、PR の代わりに「upstream vX.Y.Z を取り込む」issue が立つ。そのときは下の手順で手元で取り込み、PR を出す。
 - 本家の変更を手元で先に取り込みたいとき。
 
 ## 手順
 
-1. 作業ツリーに未コミットの変更が無い状態で、取り込み先のブランチ（main）にいる。
+1. 作業ツリーに未コミットの変更が無い状態で、main から取り込みのブランチ（例 `upstream-sync/vX.Y.Z`）を切る。main は PR 必須なので、直接 merge しない。
 2. `scripts/plus/sync-upstream.sh --dry-run vX.Y.Z` で予定を見る。
 3. `scripts/plus/sync-upstream.sh vX.Y.Z` を実行する。終了コード 0 なら、merge・`plus:` の印の確認・`go build`・`go test` が通っている。
 4. 衝突で止まったら、下の基準で直して commit する。
