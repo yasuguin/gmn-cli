@@ -2,9 +2,7 @@
 
 ## 0.1.2-rc.2 (2026-11-26)
 
-<!-- Release notes generated using configuration in .github/release.yml at main -->
-
-
+npm の公開を trusted publisher（OIDC）に切り替えたことを確かめるためのプレリリース。利用者向けの変更はない。
 
 **Full Changelog**: https://github.com/yasuguin/gmn-cli/compare/gmn-v0.1.2-rc.1...gmn-v0.1.2-rc.2
 
