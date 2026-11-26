@@ -34,8 +34,8 @@ official_bin_setup() {
 
 run_installer() {
   local install_dir="$1"
-  GEMINI_VERSION="$version" \
-    GEMINI_INSTALL_DIR="$install_dir" \
+  GMN_VERSION="$version" \
+    GMN_INSTALL_DIR="$install_dir" \
     GMN_PLATFORM="$platform" \
     GMN_DOWNLOAD_BASE="file://$work/release" \
     bash "$installer" >"$install_dir.log" 2>&1

@@ -9,8 +9,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 #
 # Options:
-#   GEMINI_INSTALL_DIR - 入れ先（既定: 書けるなら /usr/local/bin、だめなら ~/.local/bin）
-#   GEMINI_VERSION     - 版（例 0.1.0 または gmn-v0.1.0）。既定は latest
+#   GMN_INSTALL_DIR - 入れ先（既定: 書けるなら /usr/local/bin、だめなら ~/.local/bin）
+#   GMN_VERSION     - 版（例 0.1.0 または gmn-v0.1.0）。既定は latest
 #
 # Windows は対象外。zip を Releases から手で取る。
 
@@ -21,7 +21,7 @@ TAG_PREFIX="gmn-v"
 BINARY_NAME="gmn"
 DEFAULT_INSTALL_DIR="/usr/local/bin"
 USER_INSTALL_DIR="$HOME/.local/bin"
-VERSION="${GEMINI_VERSION:-latest}"
+VERSION="${GMN_VERSION:-latest}"
 # GMN_DOWNLOAD_BASE と GMN_PLATFORM は scripts/plus/install_test.sh が
 # ローカルの fixture を指すために使う。通常の利用では設定しない（既定は uname から決める）。
 DOWNLOAD_BASE="${GMN_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
@@ -60,7 +60,7 @@ resolve_tag() {
     latest="https://api.github.com/repos/${REPO}/releases/latest"
     tag=$(curl -fsSL "$latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') || tag=""
     if [ -z "$tag" ]; then
-      log_error "最新リリースの版を取れなかった（GEMINI_VERSION で版を指定すれば API を使わない）"
+      log_error "最新リリースの版を取れなかった（GMN_VERSION で版を指定すれば API を使わない）"
       exit 1
     fi
     echo "$tag"
@@ -73,8 +73,8 @@ resolve_tag() {
 }
 
 get_install_dir() {
-  if [ -n "${GEMINI_INSTALL_DIR:-}" ]; then
-    echo "$GEMINI_INSTALL_DIR"
+  if [ -n "${GMN_INSTALL_DIR:-}" ]; then
+    echo "$GMN_INSTALL_DIR"
     return
   fi
   if [ -w "$DEFAULT_INSTALL_DIR" ] || [ -w "$(dirname "$DEFAULT_INSTALL_DIR")" ]; then

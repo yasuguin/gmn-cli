@@ -32,7 +32,7 @@ uvx gmn-cli --help          # installs gmn and gmn-cli
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
 
-The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) (tags `gmn-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GEMINI_INSTALL_DIR` to choose the directory, and `GEMINI_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
+The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) (tags `gmn-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GMN_INSTALL_DIR` to choose the directory, and `GMN_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
 
 ## Quick start
 
