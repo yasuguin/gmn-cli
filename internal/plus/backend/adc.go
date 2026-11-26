@@ -72,9 +72,26 @@ type adcClient struct {
 	dryRun bool
 	load   func(context.Context) (oauth2.TokenSource, error)
 
-	once sync.Once
-	src  oauth2.TokenSource
-	err  error
+	mu  sync.Mutex
+	src oauth2.TokenSource
+}
+
+// tokenSource は ADC を最初に使うときに 1 回だけ読み、成功したものだけ覚える。
+// 失敗を覚えると一時的な失敗のあとの全リクエストが失敗し続けるので、次のリクエストで再試行する。
+// oauth2 は読み出しに渡した context を後のトークン更新にも使うため、リクエストの context ではなく
+// プロセスの寿命の Background を渡す（リクエストが終わった context で約 1 時間後の更新が失敗するのを避ける）。
+func (c *adcClient) tokenSource() (oauth2.TokenSource, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.src != nil {
+		return c.src, nil
+	}
+	src, err := c.load(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	c.src = src
+	return src, nil
 }
 
 // dryRunAuthorization は --dry-run のプレビューに出す Authorization の値。
@@ -91,11 +108,11 @@ func (c *adcClient) Do(req *http.Request) (*http.Response, error) {
 		req.Header.Set("Authorization", dryRunAuthorization)
 		return c.next.Do(req)
 	}
-	c.once.Do(func() { c.src, c.err = c.load(req.Context()) })
-	if c.err != nil {
-		return nil, adcNotFoundError{c.err}
+	src, err := c.tokenSource()
+	if err != nil {
+		return nil, adcNotFoundError{err}
 	}
-	tok, err := c.src.Token()
+	tok, err := src.Token()
 	if err != nil {
 		return nil, adcTokenError{err}
 	}

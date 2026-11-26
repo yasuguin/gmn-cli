@@ -125,3 +125,45 @@ func TestADCは期限切れのトークンを次のリクエストで取り直�
 		})
 	}
 }
+
+func TestキャンセルされたcontextのリクエストでTokenSourceを作っても後のリクエストが成功する(t *testing.T) {
+	inner := &fakeTransport{}
+	// 渡された context が生きている間だけトークンを返す（oauth2 が context を更新に使うのを模す）。
+	load := func(ctx context.Context) (oauth2.TokenSource, error) {
+		return ctxSource{ctx}, nil
+	}
+	c := &adcClient{next: inner, load: load}
+	ctx, cancel := context.WithCancel(context.Background())
+	req := httptest.NewRequest("POST", "http://example.test/x", nil).WithContext(ctx)
+	if _, err := c.Do(req); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	do(t, c, nil)
+}
+
+func TestADCの読み出しに失敗してもキャッシュせず次のリクエストで再試行する(t *testing.T) {
+	inner := &fakeTransport{}
+	calls := 0
+	load := func(context.Context) (oauth2.TokenSource, error) {
+		calls++
+		if calls == 1 {
+			return nil, fmt.Errorf("一時的な失敗")
+		}
+		return &counterSource{}, nil
+	}
+	c := &adcClient{next: inner, load: load}
+	if _, err := c.Do(httptest.NewRequest("POST", "http://example.test/x", nil)); err == nil {
+		t.Fatal("1 回目は失敗するはず")
+	}
+	do(t, c, nil)
+}
+
+type ctxSource struct{ ctx context.Context }
+
+func (s ctxSource) Token() (*oauth2.Token, error) {
+	if err := s.ctx.Err(); err != nil {
+		return nil, err
+	}
+	return &oauth2.Token{AccessToken: "tok"}, nil
+}
