@@ -13,7 +13,7 @@
   ```
   PR に noreply 以外のアドレスの commit が混ざると、必須チェック `noreply` が落ちます。落ちたときは、出力の直し方に従ってください。
 - 通常の PR は squash でマージします。PR の題が main の 1 commit になるので、題は conventional commit の形（`fix(plus): …`・`feat(plus): …`）で書きます。
-- 本家の取り込みの PR だけは merge commit でマージします。本家の履歴を残し、次の取り込みの基点を崩さないためです（`scripts/plus/sync-upstream.sh` は rebase しない前提）。
+- 本家の取り込みの PR だけは merge commit でマージします。本家の履歴を残し、次の取り込みの基点を崩さないためです（`scripts/plus/sync-upstream.sh` は rebase しない前提）。取り込みの PR は、週 1 回の workflow `plus upstream watch` が GitHub App `gmn-cli-bot` で自動で作ります。衝突したときは issue になるので、`.agents/skills/plus-upstream-sync/SKILL.md` の手順で手元で取り込みます。
 
 ## リリースの出し方
 
