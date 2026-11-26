@@ -24,4 +24,5 @@
 - `CHANGELOG.md` と GitHub Release の本文は、PR 単位の変更履歴です（GitHub のリリースノートの生成を使う）。PR の題から自動で付くラベルで「機能」（feat）・「修正」（fix）・「本家の取り込み」（chore(upstream)）に分かれ、それ以外（ci・docs・refactor など）は載りません。本家の取り込みは、取り込みの PR 1 つ分の 1 行になります。
 - リリース PR をマージすると、`gmn-vX.Y.Z` のタグと下書きの GitHub Release ができ、同じ workflow（`release-gmn.yaml`）が asset を足してから Release を公開し、Homebrew・PyPI・npm に出します。
 - プレリリース（例 `0.1.2-rc.1`）を出すときは、`release-please-config.json` の package `"."` に `"release-as": "0.1.2-rc.1"` を足す PR を入れ、できたリリース PR をマージします。出したら、`release-as` を消す PR を入れてください（残すと次のリリース PR も同じ版になる）。プレリリースは npm では `next`、GitHub Release では prerelease（latest にはしない）になり、Homebrew には出ません。
+- プレリリースの後の正式版も、`release-as` で版（例 `0.1.2`）を指定して出します。release-please はプレリリースの後、`0.1.3-rc.2` のように接尾辞を残した版を提案するためです。
 - リリース PR は GitHub App `gmn-cli-bot` が作ります。既定の `GITHUB_TOKEN` で作った PR では、必須チェック `noreply` が起動しないためです。
