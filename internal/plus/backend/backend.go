@@ -137,13 +137,14 @@ func Apply(cmd *cobra.Command) error {
 	}
 	current.Store(&s)
 	adcPending.Store(false)
+	projectMissing.Store(false)
 	plus.SetAPIKeyDisabled(s.IsVertex())
 	if !s.IsVertex() {
 		return nil
 	}
-	if s.Project == "" {
-		return flagutil.WithCLIValidation(missingProjectError{})
-	}
+	// project の要求は最初のリクエストまで遅らせる。whoami・configure・version・--schema のように
+	// リクエストを送らないコマンドは project が無くても動かす（WrapHTTPClient が送る直前に止める）。
+	projectMissing.Store(s.Project == "")
 
 	// --server-url を明示したときはテストのスタブなどへの送り先を優先し、URL は組み立てない。
 	if _, changed := flagutil.GetStringFlag(cmd, "server-url"); !changed {
@@ -160,7 +161,7 @@ func Apply(cmd *cobra.Command) error {
 	_, tokenSource := config.ResolveRequestSecurityCredential(cmd, "access-token")
 	adcPending.Store(tokenSource == "unset")
 	// 課金・クォータの project は、明示（フラグ・環境変数・設定）が無ければ project に揃える。
-	if _, changed := flagutil.GetStringFlag(cmd, "user-project"); !changed && config.GetString("user-project") == "" {
+	if _, changed := flagutil.GetStringFlag(cmd, "user-project"); !changed && config.GetString("user-project") == "" && s.Project != "" {
 		if err := cmd.Flags().Set("user-project", s.Project); err != nil {
 			return err
 		}

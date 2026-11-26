@@ -24,6 +24,16 @@ const authADC = "adc"
 // Apply が決め、WrapHTTPClient が読む。
 var adcPending atomic.Bool
 
+// projectMissing は Agent Platform なのに project が未設定、という状態。リクエストを送る時点で止める。
+var projectMissing atomic.Bool
+
+// missingProjectClient は何も送らず、project 未設定のエラーを返す。
+type missingProjectClient struct{}
+
+func (missingProjectClient) Do(*http.Request) (*http.Response, error) {
+	return nil, flagutil.WithCLIValidation(missingProjectError{})
+}
+
 // Doer は HTTP リクエストを送れるもの。本家の client.HTTPClient と同じ形で、
 // backend が client パッケージを import しなくて済むように別に定義している。
 type Doer interface {
@@ -38,6 +48,9 @@ type Doer interface {
 // oauth2.ReuseTokenSource が期限前に自動で取り直す。
 // 本家の 3 つの HTTP 経路（SDK・rawhttp・環境ランタイム）のうち、SDK と rawhttp がこれを通る。
 func WrapHTTPClient(cmd *cobra.Command, c Doer) Doer {
+	if projectMissing.Load() {
+		return missingProjectClient{}
+	}
 	if !adcPending.Load() {
 		return c
 	}

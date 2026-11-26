@@ -264,3 +264,17 @@ func exitCodeOf(err error) int {
 	}
 	return -1
 }
+
+func TestPlusBackendVertexでprojectが無くてもローカルのコマンドは動く(t *testing.T) {
+	for _, args := range [][]string{{"whoami"}, {"version"}, {"configure", "--help"}, {"generate", "--help"}} {
+		full := append([]string{"--no-interactive", "--no-keyring", "--backend", "vertex"}, args...)
+		result := runPlus(t, t.TempDir(), nil, full...)
+		if result.err != nil {
+			t.Errorf("%v: project 未設定でも動くはず: %v\n%s", args, result.err, result.stderr)
+		}
+	}
+	result := runPlus(t, t.TempDir(), nil, "--no-interactive", "--no-keyring", "--backend", "vertex", "whoami")
+	if !strings.Contains(result.stdout, "vertex") || !strings.Contains(result.stdout, "unset") {
+		t.Errorf("whoami が project 未設定を表示していない:\n%s", result.stdout)
+	}
+}
