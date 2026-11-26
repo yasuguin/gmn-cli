@@ -178,12 +178,9 @@ func newSession(cmd *cobra.Command) (*session, error) {
 	}
 	s.baseURL = u.Scheme + "://" + u.Host
 
-	// Agent Platform は OAuth のアクセストークンだけを受け付ける。
-	accessToken, _ := config.ResolveRequestSecurityCredential(cmd, "access-token")
-	if accessToken == "" {
-		return nil, flagutil.WithCLIValidation(fmt.Errorf("--backend vertex needs an access token: run `gcloud auth application-default login` or pass --access-token"))
-	}
-	s.accessToken = accessToken
+	// Agent Platform は OAuth のアクセストークンだけを受け付ける。明示のトークンがあればそれを付け、
+	// 無ければ下の backend.WrapHTTPClient が ADC のトークンをリクエストごとに付ける。
+	s.accessToken, _ = config.ResolveRequestSecurityCredential(cmd, "access-token")
 	s.userProject = resolveGlobalString(cmd, "user-project")
 
 	if hdrs, _ := flagutil.GetStringArrayFlag(cmd, "header"); len(hdrs) > 0 {
@@ -213,7 +210,8 @@ func newSession(cmd *cobra.Command) (*session, error) {
 	if tc := testclient.NewTestHTTPClient(); tc != nil {
 		httpClient = tc
 	}
-	s.client = client.WrapClientForDiagnostics(cmd, httpClient)
+	// SDK・rawhttp の経路と同じく、診断ラッパーの外側で ADC のトークンを付ける。
+	s.client = backend.WrapHTTPClient(cmd, client.WrapClientForDiagnostics(cmd, httpClient))
 	return s, nil
 }
 
@@ -229,7 +227,9 @@ func (s *session) getJSON(ctx context.Context, p string, query url.Values, out a
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", hooks.UserAgent(sdk.New().SDKVersion))
-	req.Header.Set("Authorization", "Bearer "+s.accessToken)
+	if s.accessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+s.accessToken)
+	}
 	if s.userProject != "" {
 		req.Header.Set("x-goog-user-project", s.userProject)
 	}

@@ -226,3 +226,21 @@ func TestPlusModelsGeminiAPIのlistは本家のまま1000件で送る(t *testing
 		t.Errorf("x-goog-api-key = %q, want K1", reqs[0].APIKey)
 	}
 }
+
+// #9 と #5 を並行で作ったため、models の経路だけ ADC を通らず「access token が要る」で止まっていた。
+func TestPlusModelsAgentPlatformはADCのトークンで送る(t *testing.T) {
+	tokens := newTokenStub(t)
+	stub := newModelsStub(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, publisherListBody("gemini-a"))
+	})
+	env := map[string]string{"GOOGLE_APPLICATION_CREDENTIALS": writeServiceAccountKey(t, tokens.server.URL)}
+	result := runPlus(t, t.TempDir(), env, "--no-interactive", "--no-keyring", "--no-retries", "-o", "json",
+		"--backend", "vertex", "--project", "my-proj", "--server-url", stub.server.URL, "models", "list")
+	if result.err != nil {
+		t.Fatalf("models list failed: %v\n%s", result.err, result.stderr)
+	}
+	got := stub.got()
+	if len(got) != 1 || got[0].Auth != "Bearer tok-1" {
+		t.Fatalf("requests = %+v", got)
+	}
+}
