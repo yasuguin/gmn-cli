@@ -8,6 +8,9 @@ func TestHostとServerURL(t *testing.T) {
 	}{
 		{"global", "aiplatform.googleapis.com", "https://aiplatform.googleapis.com/v1beta1/projects/p/locations"},
 		{"us-central1", "us-central1-aiplatform.googleapis.com", "https://us-central1-aiplatform.googleapis.com/v1beta1/projects/p/locations"},
+		// マルチリージョンは <location>-aiplatform ではなく aiplatform.<location>.rep のホストになる。
+		{"us", "aiplatform.us.rep.googleapis.com", "https://aiplatform.us.rep.googleapis.com/v1beta1/projects/p/locations"},
+		{"eu", "aiplatform.eu.rep.googleapis.com", "https://aiplatform.eu.rep.googleapis.com/v1beta1/projects/p/locations"},
 	}
 	for _, c := range cases {
 		s := Settings{Backend: Vertex, Project: "p", Location: c.location}

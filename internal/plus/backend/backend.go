@@ -43,10 +43,16 @@ type Settings struct {
 // IsVertex は Agent Platform が選ばれているかを返す。
 func (s Settings) IsVertex() bool { return s.Backend == Vertex }
 
-// Host は Agent Platform のホスト名。global だけ location を付けない。
+// Host は Agent Platform のホスト名。global は location を付けない。
+// マルチリージョンの us・eu は、単一リージョンの <location>-aiplatform とは別の形の
+// aiplatform.<location>.rep のホストになる（<location>-aiplatform に送ると 404 の HTML が返る）。
+// Interactions API が受け付けるのは global・us・eu だけで、単一リージョンはサーバーが 400 で拒否する。
 func (s Settings) Host() string {
-	if s.Location == DefaultLocation {
+	switch s.Location {
+	case DefaultLocation:
 		return "aiplatform.googleapis.com"
+	case "us", "eu":
+		return "aiplatform." + s.Location + ".rep.googleapis.com"
 	}
 	return s.Location + "-aiplatform.googleapis.com"
 }
