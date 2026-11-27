@@ -183,16 +183,20 @@ func WhoamiInfo(cmd *cobra.Command) (map[string]any, []Row) {
 		s = Settings{Backend: Gemini, BackendSource: "default", Location: DefaultLocation, LocationSource: "default", ProjectSource: "unset"}
 	}
 	rows := []Row{
-		{"backend", s.BackendSource, s.Backend},
-		{"project", s.ProjectSource, s.Project},
-		{"location", s.LocationSource, s.Location},
+		{Name: "backend", Source: s.BackendSource, Value: s.Backend},
+		{Name: "project", Source: s.ProjectSource, Value: s.Project},
+		{Name: "location", Source: s.LocationSource, Value: s.Location},
 	}
 	if s.IsVertex() {
 		rows = append(rows, authRow(cmd))
 	}
 	info := map[string]any{}
 	for _, r := range rows {
-		info[r.Name] = map[string]any{"source": r.Source, "value": r.Value}
+		entry := map[string]any{"source": r.Source, "value": r.Value}
+		for k, v := range r.Extra {
+			entry[k] = v
+		}
+		info[r.Name] = entry
 	}
 	return info, rows
 }
@@ -200,9 +204,10 @@ func WhoamiInfo(cmd *cobra.Command) (map[string]any, []Row) {
 // authRow は認証の出どころ。明示の access-token（トークン本体は出さない）か ADC。
 func authRow(cmd *cobra.Command) Row {
 	if _, source := config.ResolveRequestSecurityCredential(cmd, "access-token"); source != "unset" {
-		return Row{"auth", source, "access-token"}
+		return Row{Name: "auth", Source: source, Value: "access-token"}
 	}
-	return Row{"auth", authADC, "ADC (read when a request is sent)"}
+	origin := findADCOrigin()
+	return Row{Name: "auth", Source: authADC, Value: origin.text(), Extra: map[string]any{"adc": origin.fields()}}
 }
 
 // AnnotateWhoami は whoami の機械可読出力に backend を足す。fork でないときは何もしない。
@@ -213,8 +218,11 @@ func AnnotateWhoami(cmd *cobra.Command, info map[string]any) {
 	info["backend"], _ = WhoamiInfo(cmd)
 }
 
-// Row は whoami の 1 行。
-type Row struct{ Name, Source, Value string }
+// Row は whoami の 1 行。Extra は機械可読出力だけに足す項目。
+type Row struct {
+	Name, Source, Value string
+	Extra               map[string]any
+}
 
 // PrintWhoami は whoami の人間向け出力に Backend 節を出す。fork でないときは何も出さない。
 func PrintWhoami(out io.Writer, cmd *cobra.Command) {
