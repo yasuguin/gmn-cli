@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/yasuguin/gmn-cli?style=flat-square)](../LICENSE)
 [![Homebrew](https://img.shields.io/badge/Homebrew-yasuguin%2Ftap-fbb040?style=flat-square&logo=homebrew)](https://github.com/yasuguin/homebrew-tap)
 
-[English](README.md)
+[English](README.md) | **日本語**
 
 `gmn` は、Gemini API または Agent Platform（旧 Vertex AI）経由で Gemini のモデルを呼ぶ、ワンショットのコマンドラインクライアントです。エージェント、スクリプト、CI から使う前提で作っていて、リクエストを 1 回送って結果を返します。自分でファイルを編集したりツールを実行したりはせず、対話型の Gemini CLI エージェントでもありません。
 
@@ -145,6 +145,13 @@ location: global
 
 1. `--access-token`（指定されている場合）
 2. ADC: `GOOGLE_APPLICATION_CREDENTIALS`、gcloud の ADC ファイル、またはメタデータサーバー（Cloud Run、GCE、Workload Identity）
+
+サービスアカウントとして実行する場合は、次のどちらかを使います。
+
+- 鍵ファイル: `export GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa-key.json`
+- 鍵を作らずになりすます: `gcloud auth application-default login --impersonate-service-account=SA_EMAIL`
+
+サービスアカウントには、プロジェクトの `roles/aiplatform.user` が必要です。
 
 トークンはリクエストごとに更新されるため、長時間の実行（動画のポーリングやエージェントの長時間実行など）でも期限切れで失敗しません。クォータプロジェクトには、`--user-project` を指定しない限り `--project` の値が使われます。
 
