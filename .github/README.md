@@ -19,7 +19,7 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## What is different
 
 - Gemini API (default): the same behavior as upstream.
-- Agent Platform (formerly Vertex AI): the same commands can call Agent Platform with Application Default Credentials (ADC). Use this when you need IAM, audit logs, or VPC Service Controls and cannot hand out API keys. Upstream has an [open feature request](https://github.com/google-gemini/gemini-api-cli/issues/241) for this.
+- Agent Platform (formerly Vertex AI): the same commands can call Agent Platform with Application Default Credentials (ADC). Use this when you need IAM, audit logs, or VPC Service Controls and cannot hand out API keys. Data Access audit logs for `aiplatform.googleapis.com` are off by default; turn them on in the project to log the calls. Upstream has an [open feature request](https://github.com/google-gemini/gemini-api-cli/issues/241) for this.
 - Separate config location and command name, so both CLIs can be installed together.
 
 ## Install
@@ -172,24 +172,27 @@ Environment variables:
 
 ## Commands on Agent Platform
 
-Verified with the maintainer's smoke script on 2026-11-26 against the `global` location.
+Verified with real calls on 2026-11-26 and 2026-11-27 against the `global` location, unless noted.
 
 - Works:
   - `generate`, `analyze`, `agent run`, `agent status`, `agent list`
   - `transcribe` (the default model is replaced; see below)
   - `image` through `generateContent`, with 4 models: `gemini-nano-banana-2.1`, `gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-2.5-flash-image`. Aspect ratio, size, output MIME type, and image edits work.
   - `tts` through `generateContent`, with 4 models: `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-3.1-flash-tts-preview`, `gemini-2.5-flash-preview-tts`. `--voice`, `--style`, and `--multi-speaker` (up to 2 speakers) work.
+  - `music`, with `lyria-3-pro-preview` (used instead of the default `lyria-3.5`, which Agent Platform does not serve) and `lyria-3-clip-preview`. It writes an MP3 file.
+  - `video` with the default `gemini-omni-1.2-flash`
+  - `agent cancel`, `agent delete-interaction`, `agent get`, `agent delete`. `agent create` reaches the API, but Agent Platform rejects the base agent `antigravity-preview-09-2026`.
   - `models list`, `models get`
-  - Local files in `analyze` and `transcribe` are sent inline if small. Larger media goes through a `gs://` URI.
+  - Local files in `analyze` and `transcribe` are sent inline if small. Larger media goes through a `gs://` URI, which works in `analyze` and `transcribe`.
 - Stops before sending (exit code 2):
   - `files` and `files upload`: use a `gs://` URI in `--input`
   - `environments`, `triggers`, `webhooks`, `voices`, `credentials`
   - `tts --voice-prompt` (custom voices)
-- Not verified:
-  - `music`, `video`
-  - `gs://` input in a real call (the smoke run skipped it)
-  - `agent` subcommands other than `run`, `status`, `list`
-  - locations other than `global`
+
+Locations:
+
+- Commands that use the Interactions API (all of the above except `image`, `tts`, and `models`) accept `global`, `us`, and `eu` (checked with `generate`). Agent Platform rejects single regions such as `us-central1` for them.
+- `image` and `tts` use the location you pass, but each model is served only in some locations. For example, in `us`, `tts` works and the default `image` model is not found.
 
 ## Model names
 

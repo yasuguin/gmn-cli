@@ -8,7 +8,7 @@ description: Call Gemini API or Agent Platform (Vertex AI) from agents, scripts,
 `gmn` is an unofficial fork of the upstream `gemini-api` CLI. It sends the same commands to either:
 
 - the Gemini API (default, authenticated with an API key), or
-- Agent Platform (formerly Vertex AI), authenticated with Application Default Credentials (ADC), so IAM, audit logs, and VPC Service Controls apply.
+- Agent Platform (formerly Vertex AI), authenticated with Application Default Credentials (ADC), so IAM, audit logs, and VPC Service Controls apply. Data Access audit logs for `aiplatform.googleapis.com` are off by default, so calls are logged only if the project turns them on.
 
 Run `gmn --help` and `gmn <command> --help` for the full flag list. This skill covers what an agent needs to choose the backend, recover from auth errors, and avoid commands that Agent Platform does not serve.
 
@@ -68,6 +68,10 @@ Works:
 - `transcribe` (default model is replaced as above)
 - `image`: writes an image file; `--aspect-ratio`, `--image-size`, `--output-mime-type`, and an input image for edits work
 - `tts`: writes a WAV file; `--voice`, `--style`, and `--multi-speaker` (up to 2 speakers) work
+- `music`: writes an MP3 file with `lyria-3-pro-preview` (replaces the default `lyria-3.5`, which Agent Platform does not serve) or `lyria-3-clip-preview`
+- `video` with the default `gemini-omni-1.2-flash`
+- `agent cancel`, `agent delete-interaction`, `agent get`, `agent delete`. Agent Platform rejects `agent create` with the base agent `antigravity-preview-09-2026`.
+- `gs://` URIs in `--input` for `analyze` and `transcribe`
 - `models list`, `models get`, `whoami`, `models`
 
 Refused before any request, with exit code 2:
@@ -75,7 +79,7 @@ Refused before any request, with exit code 2:
 - `files` (including `files upload`). Put the file in Cloud Storage and pass its `gs://` URI with `--input`.
 - `environments`, `triggers`, `webhooks`, `voices`, `credentials`
 
-Not verified on Agent Platform: `music`, `video`, `gs://` input (the smoke run skipped it), and `agent` subcommands other than run, status, and list. Treat these as untested and check the output carefully.
+Locations: commands that use the Interactions API (all except `image`, `tts`, and `models`) accept only `global`, `us`, and `eu`. A single region such as `us-central1` fails with `Unsupported location`. `image` and `tts` go to the location you pass, but each model is served only in some locations; on a not-found error, retry with `--location global`.
 
 Not supported: `tts --voice-prompt` (custom voices). Use a built-in voice name.
 

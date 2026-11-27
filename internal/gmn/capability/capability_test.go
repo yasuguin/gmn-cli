@@ -25,7 +25,7 @@ func TestLookup子コマンドは近い親の扱いを継ぎ表に無ければ�
 		{"files upload", capability.GCS, "files upload"},
 		{"files list", capability.Unsupported, "files"},
 		{"environments files upload", capability.Unsupported, "environments"},
-		{"video", capability.Unverified, "video"},
+		{"models list", capability.Unverified, "models"},
 		{"本家に新しく増えたコマンド", capability.Unverified, ""},
 	}
 	for _, c := range cases {

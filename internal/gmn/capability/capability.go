@@ -55,13 +55,13 @@ var table = map[string]Entry{
 	"generate":   {Kind: Interactions},
 	"music":      {Kind: Interactions},
 	"transcribe": {Kind: Interactions},
+	"video":      {Kind: Interactions},
 
 	// generateContent に切り替える（今は止めない）
 	"image": {Kind: GenerateContent},
 	"tts":   {Kind: GenerateContent},
 
 	// 未確認（smoke で確定するまで止めない）
-	"video":  {Kind: Unverified},
 	"models": {Kind: Unverified},
 
 	// gs:// を使う
