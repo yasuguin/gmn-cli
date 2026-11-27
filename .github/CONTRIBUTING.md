@@ -7,6 +7,7 @@
 ## 変更の入れ方
 
 - main への直接 push・強制 push・削除は、ruleset で拒否されます。ブランチを切って PR を出してください。
+- ブランチ名は `gmn/<内容>`（例: `gmn/next-0.1.2`）にします。`plus` は fork の差し込みの層（`internal/plus/`・`scripts/plus/`・commit の scope）の名前なので、ブランチには使いません。自動で作られる `release-please--…` と `upstream-sync/<tag>` はそのままです。
 - commit は GitHub の noreply アドレスで作ります。clone したら最初に設定してください。
   ```sh
   git config user.email "<ID>+<ユーザー名>@users.noreply.github.com"
