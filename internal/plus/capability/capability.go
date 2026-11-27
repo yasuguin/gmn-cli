@@ -53,6 +53,7 @@ var table = map[string]Entry{
 	"agent":      {Kind: Interactions},
 	"analyze":    {Kind: Interactions},
 	"generate":   {Kind: Interactions},
+	"music":      {Kind: Interactions},
 	"transcribe": {Kind: Interactions},
 
 	// generateContent に切り替える（今は止めない）
@@ -60,7 +61,6 @@ var table = map[string]Entry{
 	"tts":   {Kind: GenerateContent},
 
 	// 未確認（smoke で確定するまで止めない）
-	"music":  {Kind: Unverified},
 	"video":  {Kind: Unverified},
 	"models": {Kind: Unverified},
 

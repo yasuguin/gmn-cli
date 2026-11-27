@@ -76,6 +76,12 @@ var table = map[string]Entry{
 	"gemini-3.8-flash-lite-tts":    {Status: GenerateContent},
 	"gemini-3.1-flash-tts-preview": {Status: GenerateContent},
 	"gemini-2.5-flash-preview-tts": {Status: GenerateContent},
+
+	// music は Interactions API で通った（response_format を付けないとき。実測 2026-11-27）。
+	// lyria-3.5 は拒否される。代わりは全長の曲を作る lyria-3-pro-preview。
+	"lyria-3-pro-preview":  {Status: Verified},
+	"lyria-3-clip-preview": {Status: Verified},
+	"lyria-3.5":            {Status: Unsupported, Alternatives: []string{"lyria-3-pro-preview", "lyria-3-clip-preview"}},
 }
 
 // Lookup は共通名のモデルの扱いを返す。表に無ければ Unverified。
