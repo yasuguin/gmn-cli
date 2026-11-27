@@ -25,18 +25,65 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 
 ## インストール
 
+どれか 1 つを選んでください。どの方法でも同じ `gmn` のバイナリが入ります。
+
+### Homebrew（macOS）
+
 ```bash
-brew install --cask yasuguin/tap/gmn-cli   # macOS only
-mise use -g github:yasuguin/gmn-cli       # from GitHub Releases
-mise use -g npm:@yasuguin/gmn-cli         # from npm
-npx @yasuguin/gmn-cli --help    # or: pnpm dlx @yasuguin/gmn-cli --help
-uvx gmn-cli --help          # installs gmn and gmn-cli
+brew install --cask yasuguin/tap/gmn-cli
+```
+
+### mise
+
+GitHub Releases から入れます。Node.js は要りません。
+
+```bash
+mise use -g github:yasuguin/gmn-cli
+```
+
+npm から入れます。GitHub への通信が止められたネットワークや、GitHub API の回数の上限に当たる CI で使えます。
+
+```bash
+mise use -g npm:@yasuguin/gmn-cli
+```
+
+### npm（入れずに実行）
+
+```bash
+npx @yasuguin/gmn-cli --help
+```
+
+pnpm なら:
+
+```bash
+pnpm dlx @yasuguin/gmn-cli --help
+```
+
+### PyPI（uvx）
+
+`gmn` と `gmn-cli` の 2 つのコマンドが使えます。
+
+```bash
+uvx gmn-cli --help
+```
+
+### インストールスクリプト（macOS・Linux）
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
 
-[mise](https://mise.jdx.dev/) なら、`github:yasuguin/gmn-cli` と `npm:@yasuguin/gmn-cli` のどちらでも入ります。入るバイナリは同じです。`github:` は GitHub Releases から落とすので Node.js が要りません。`npm:` は、GitHub への通信が止められたネットワークや、GitHub API の回数の上限に当たる CI で使えます。
+[GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。照合に失敗したら何も入れません。書き込めれば `/usr/local/bin` に、書き込めなければ `~/.local/bin` に入れます。
 
-インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GMN_INSTALL_DIR` を、バージョンを固定するには `GMN_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
+入れる場所や版を決めるときは、`GMN_INSTALL_DIR` と `GMN_VERSION` を渡します。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | GMN_INSTALL_DIR="$HOME/bin" GMN_VERSION=0.1.0 bash
+```
+
+### Windows
+
+インストールスクリプトは Windows に対応していません。[GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) から zip をダウンロードしてください。
 
 ## クイックスタート
 
