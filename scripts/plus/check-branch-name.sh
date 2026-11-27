@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # PR のブランチ名が決まりの接頭辞で始まるかを確かめる（.github/CONTRIBUTING.md「変更の入れ方」）。
-# 手で切るブランチは gmn/<内容>。release-please--… と upstream-sync/<tag> は workflow が自動で作る。
+# 手で切るブランチは gmn/<内容>。release-please--… と upstream-sync/<tag> は workflow が、dependabot/… は Dependabot が自動で作る。
 set -euo pipefail
 
 branch=${1-}
 case "$branch" in
-  gmn/?* | release-please--?* | upstream-sync/?*) exit 0 ;;
+  gmn/?* | release-please--?* | upstream-sync/?* | dependabot/?*) exit 0 ;;
 esac
 
 cat >&2 <<MSG

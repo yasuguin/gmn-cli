@@ -20,6 +20,8 @@ check "gmn/next-0.1.2" ok
 check "gmn/branch-prefix" ok
 check "release-please--branches--main--components--gmn" ok
 check "upstream-sync/v0.6.0" ok
+check "dependabot/go_modules/golang.org/x/net-0.40.0" ok
+check "dependabot/" ng
 check "plus/next-0.1.2" ng
 check "dev/foo" ng
 check "gmn/" ng
