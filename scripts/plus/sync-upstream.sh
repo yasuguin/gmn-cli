@@ -124,7 +124,7 @@ plus_lines() {
 }
 plus_lines >"$baseline"
 
-if ! git merge --no-ff -m "本家 $tag を取り込む
+if ! git merge --no-ff -m "Merge upstream $tag
 
 scripts/plus/sync-upstream.sh による merge。rebase しない。" "$ref"; then
 	conflicts=$(git diff --name-only --diff-filter=U)

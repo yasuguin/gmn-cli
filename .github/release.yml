@@ -8,12 +8,12 @@ changelog:
       - "autorelease: pending"
       - "autorelease: tagged"
   categories:
-    - title: 機能
+    - title: Features
       labels:
         - "changelog: feat"
-    - title: 修正
+    - title: Fixes
       labels:
         - "changelog: fix"
-    - title: 本家の取り込み
+    - title: Upstream sync
       labels:
         - "changelog: upstream"

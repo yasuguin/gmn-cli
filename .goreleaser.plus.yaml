@@ -66,7 +66,7 @@ homebrew_casks:
             run "/usr/bin/xattr", args: ["-d", "com.apple.quarantine", "gmn"], chdir: ".", must_succeed: false
           end
     homepage: https://github.com/yasuguin/gmn-cli
-    description: "Unofficial fork of google-gemini/gemini-api-cli (Gemini API and Agent Platform). Not affiliated with Google."
+    description: "Unofficial fork of google-gemini/gemini-api-cli (Gemini API and Agent Platform). Not affiliated with Google. / google-gemini/gemini-api-cli の非公式の fork（Gemini API と Agent Platform）。Google とは関係ありません。"
     repository:
       owner: yasuguin
       name: homebrew-tap
