@@ -608,13 +608,13 @@ func isolatedEnv(home string, overrides map[string]string) []string {
 		"SRC_CODY":            true,
 		"FORCE_AGENT_MODE":    true,
 
-		// plus: gmn の接続先。実行環境の値がテストに混ざらないようにする。
+		// gmn: gmn の接続先。実行環境の値がテストに混ざらないようにする。
 		// 本家の行の桁揃えを崩さないよう、空行で区切って末尾に置く。
 		"GOOGLE_GENAI_USE_VERTEXAI": true,
 		"GOOGLE_CLOUD_PROJECT":      true,
 		"GOOGLE_CLOUD_LOCATION":     true,
 
-		// plus: ADC の資格情報の探索先。開発者の gcloud ログインがテストに混ざらないようにする。
+		// gmn: ADC の資格情報の探索先。開発者の gcloud ログインがテストに混ざらないようにする。
 		"GOOGLE_APPLICATION_CREDENTIALS": true,
 		"CLOUDSDK_CONFIG":                true,
 		"GCE_METADATA_HOST":              true,

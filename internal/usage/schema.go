@@ -23,7 +23,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google-gemini/gemini-api-cli/internal/plus/guidance"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/guidance"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -191,7 +191,7 @@ func EmitSchema(cmd *cobra.Command, w io.Writer) error {
 	var b strings.Builder
 	tabled := cmd.Root().Name() == usageRootName
 	renderUsageNode(&b, cmd, strings.Join(selectedCommandPath(cmd), " "), 0, true, tabled)
-	_, err := io.WriteString(w, guidance.Docs(cmd, b.String())) // plus: Agent Platform では API key の案内を ADC の案内に替える
+	_, err := io.WriteString(w, guidance.Docs(cmd, b.String())) // gmn: Agent Platform では API key の案内を ADC の案内に替える
 	return err
 }
 

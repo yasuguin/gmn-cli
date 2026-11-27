@@ -21,9 +21,9 @@ import (
 
 	"github.com/google-gemini/gemini-api-cli/internal/client"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/vertexmodels" // gmn:
 	"github.com/google-gemini/gemini-api-cli/internal/interactive"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/vertexmodels" // plus:
 	"github.com/google-gemini/gemini-api-cli/internal/sdk/models/operations"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
@@ -70,7 +70,7 @@ func runModelsGetCmd(cmd *cobra.Command, args []string) error {
 	if err := flagutil.ResolvePositionalFlag(cmd, args); err != nil {
 		return err
 	}
-	if vertexmodels.Enabled() { // plus: Agent Platform は基盤モデルの情報を取り、応答を Gemini API の形に写す
+	if vertexmodels.Enabled() { // gmn: Agent Platform は基盤モデルの情報を取り、応答を Gemini API の形に写す
 		return vertexmodels.RunGet(cmd)
 	}
 	req, err := flagutil.BuildRequest[operations.ModelsGetRequest](cmd, modelsGetCmdMeta, "", "")

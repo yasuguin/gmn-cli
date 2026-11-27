@@ -84,7 +84,7 @@ uv tool install gmn-cli
 ### Install script (macOS and Linux)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/gmn/install.sh | bash
 ```
 
 The script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) (tags `gmn-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`.
@@ -92,7 +92,7 @@ The script downloads the binary from [GitHub Releases](https://github.com/yasugu
 To choose the directory or pin a version, set `GMN_INSTALL_DIR` and `GMN_VERSION`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | GMN_INSTALL_DIR="$HOME/bin" GMN_VERSION=0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/gmn/install.sh | GMN_INSTALL_DIR="$HOME/bin" GMN_VERSION=0.1.0 bash
 ```
 
 ### Windows
@@ -220,4 +220,4 @@ The fork takes in upstream releases only, not unreleased changes on upstream `ma
 
 ## License
 
-Apache-2.0, the same as upstream. See [LICENSE](../LICENSE). Files changed by this fork are marked with a `plus:` comment.
+Apache-2.0, the same as upstream. See [LICENSE](../LICENSE). Files changed by this fork are marked with a `gmn:` comment.

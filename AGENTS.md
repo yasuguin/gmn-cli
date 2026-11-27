@@ -17,7 +17,7 @@ ruleset「main は PR だけで変える」（bypass は誰にも無い）と re
 ## 機械で止めていない判断
 
 - **マージの方法**: 通常の PR は squash。merge commit は本家の取り込みの PR（`upstream-sync/<tag>`）だけに使う。本家の履歴を残して次の取り込みの基点を保つためで、ほかの PR で merge commit を選ぶと版の計算と履歴が崩れる。
-- **PR の題**: squash で main の 1 commit になり、release-please がそこから版と変更履歴を決める。conventional commit の形（`fix(plus): …`・`feat(plus): …`）で、利用者に見える変化を英語で書く。形と言語は `pr-title` が止めるので、ここで判断するのは中身（利用者に見える変化か、feat と fix のどちらか）だけ。PR と commit の本文は日本語。
+- **PR の題**: squash で main の 1 commit になり、release-please がそこから版と変更履歴を決める。conventional commit の形（`fix(gmn): …`・`feat(gmn): …`）で、利用者に見える変化を英語で書く。形と言語は `pr-title` が止めるので、ここで判断するのは中身（利用者に見える変化か、feat と fix のどちらか）だけ。PR と commit の本文は日本語。
 - **リリース PR**（`release-please--…`）: マージすると npm・PyPI・Homebrew へ出て戻せない。変更履歴に「Features」「Fixes」「Upstream sync」が載ったときだけ、ユーザーに確かめてからマージする。タグは手で打たない。
 - **public に出る文字**: commit・issue・PR・コードに、API key・認証情報・社内の名前や情報を書かない。push protection は既知の形式の key しか止めない。
 - **本家への出力**: 本家（google-gemini/gemini-api-cli）に issue・PR を出さない。fork の不具合は fork の Issues に書く。
