@@ -8,7 +8,7 @@ description: Call Gemini API or Agent Platform (Vertex AI) from agents, scripts,
 `gmn` is an unofficial fork of the upstream `gemini-api` CLI. It sends the same commands to either:
 
 - the Gemini API (default, authenticated with an API key), or
-- Agent Platform (formerly Vertex AI), authenticated with Application Default Credentials (ADC), so IAM, audit logs, and VPC Service Controls apply. Data Access audit logs for `aiplatform.googleapis.com` are off by default, so calls are logged only if the project turns them on.
+- Agent Platform (formerly Vertex AI), authenticated with Application Default Credentials (ADC), so IAM, audit logs, and VPC Service Controls apply. Data Access audit logs for `aiplatform.googleapis.com` are off by default, so calls are logged only if the project turns them on. When they are on, both Interactions API and `generateContent` calls are logged with the caller's account.
 
 Run `gmn --help` and `gmn <command> --help` for the full flag list. This skill covers what an agent needs to choose the backend, recover from auth errors, and avoid commands that Agent Platform does not serve.
 

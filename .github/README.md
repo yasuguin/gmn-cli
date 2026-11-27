@@ -19,7 +19,7 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## What is different
 
 - Gemini API (default): the same behavior as upstream.
-- Agent Platform (formerly Vertex AI): the same commands can call Agent Platform with Application Default Credentials (ADC). Use this when you need IAM, audit logs, or VPC Service Controls and cannot hand out API keys. Data Access audit logs for `aiplatform.googleapis.com` are off by default; turn them on in the project to log the calls. Upstream has an [open feature request](https://github.com/google-gemini/gemini-api-cli/issues/241) for this.
+- Agent Platform (formerly Vertex AI): the same commands can call Agent Platform with Application Default Credentials (ADC). Use this when you need IAM, audit logs, or VPC Service Controls and cannot hand out API keys. Data Access audit logs for `aiplatform.googleapis.com` are off by default; turn them on in the project to log the calls. Once they are on, both Interactions API calls (`generate`) and `generateContent` calls (`image`) are logged with the caller's account (checked on 2026-11-27; the setting took a minute or two to apply). Upstream has an [open feature request](https://github.com/google-gemini/gemini-api-cli/issues/241) for this.
 - Separate config location and command name, so both CLIs can be installed together.
 
 ## Install
