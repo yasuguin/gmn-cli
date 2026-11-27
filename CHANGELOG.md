@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 (2026-11-27)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### Features
+* feat(plus): show where ADC credentials come from in whoami by @yasuguin in https://github.com/yasuguin/gmn-cli/pull/56
+### Fixes
+* fix(plus): reject tts --multi-speaker entries with extra '=' separators by @yasuguin in https://github.com/yasuguin/gmn-cli/pull/53
+* fix(plus): send requests for the us and eu locations to the multi-region endpoints by @yasuguin in https://github.com/yasuguin/gmn-cli/pull/59
+* fix(plus): make music work on Agent Platform by @yasuguin in https://github.com/yasuguin/gmn-cli/pull/60
+
+
+**Full Changelog**: https://github.com/yasuguin/gmn-cli/compare/gmn-v0.1.2-rc.2...gmn-v0.2.0
+
 ## 0.1.2-rc.2 (2026-11-26)
 
 npm の公開を trusted publisher（OIDC）に切り替えたことを確かめるためのプレリリース。利用者向けの変更はない。
