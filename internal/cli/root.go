@@ -36,12 +36,12 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/config"
 	"github.com/google-gemini/gemini-api-cli/internal/explorer"
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/backend"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/capability"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/guidance"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/modelmap"
 	"github.com/google-gemini/gemini-api-cli/internal/interactive"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/backend"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/capability"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/guidance"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/modelmap"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -106,13 +106,13 @@ func NewRootCommand() (*cobra.Command, error) {
 			output.InitAgentMode(cmd)
 			flagutil.SetStdinReadDeadline(output.IsAgentMode())
 			flagutil.ResetStdinSkip()
-			if err := capability.Guard(cmd); err != nil { // plus: Agent Platform で使えないコマンドを通信前に止める
+			if err := capability.Guard(cmd); err != nil { // gmn: Agent Platform で使えないコマンドを通信前に止める
 				return err
 			}
-			if err := modelmap.Guard(cmd); err != nil { // plus: Agent Platform に無いモデルの明示を通信前に止める
+			if err := modelmap.Guard(cmd); err != nil { // gmn: Agent Platform に無いモデルの明示を通信前に止める
 				return err
 			}
-			return backend.Apply(cmd) // plus: Agent Platform なら接続先と認証を切り替える
+			return backend.Apply(cmd) // gmn: Agent Platform なら接続先と認証を切り替える
 		},
 	}
 	rootCmd.Flags().Bool("help-global", false, "Print global flags shared by every command")
@@ -213,7 +213,7 @@ func NewRootCommand() (*cobra.Command, error) {
 	_ = rootCmd.PersistentFlags().SetAnnotation("api-revision", "speakeasy:group", []string{"API Parameters"})
 	rootCmd.PersistentFlags().String("user-project", "", "Quota project header to send with Google GenAI API requests (env: GEMINI_USER_PROJECT)")
 	_ = rootCmd.PersistentFlags().SetAnnotation("user-project", "speakeasy:group", []string{"API Parameters"})
-	backend.RegisterFlags(rootCmd) // plus: --backend・--project・--location（fork のときだけ）
+	backend.RegisterFlags(rootCmd) // gmn: --backend・--project・--location（fork のときだけ）
 
 	// Annotate persistent flags for grouped help display
 	for _, ga := range []struct{ flag, group string }{
@@ -689,7 +689,7 @@ func compactRootHelpFooter(cmd *cobra.Command) string {
 	}
 	lines = append(lines, "Globals (auth, network, output): "+rootName+" --help-global")
 	lines = append(lines, "Setup: export GEMINI_API_KEY=...   or   "+rootName+" configure")
-	return guidance.Docs(cmd, strings.Join(lines, string(rune(10)))) // plus: Agent Platform では API key の案内を ADC の案内に替える
+	return guidance.Docs(cmd, strings.Join(lines, string(rune(10)))) // gmn: Agent Platform では API key の案内を ADC の案内に替える
 }
 
 // groupedUsageTemplate returns Cobra's default usage template with the local

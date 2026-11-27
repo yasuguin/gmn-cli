@@ -67,7 +67,7 @@ jobs:
             printf '::error::Could not read Version from internal/cli/version.go\n'
             exit 1
           fi
-          printf 'PLUS_BASE_VERSION=%s\n' "$cli_version" >> "$GITHUB_ENV"
+          printf 'GMN_BASE_VERSION=%s\n' "$cli_version" >> "$GITHUB_ENV"
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -87,7 +87,7 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean --skip=validate -f .goreleaser.plus.yaml
+          args: release --clean --skip=validate -f .goreleaser.gmn.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
@@ -146,9 +146,9 @@ jobs:
 
       - name: Build wheels
         env:
-          PLUS_VERSION: ${{ needs.release-please.outputs.tag_name }}
+          GMN_RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          version="${PLUS_VERSION#gmn-v}"
+          version="${GMN_RELEASE_TAG#gmn-v}"
           uv run --no-project packaging/pypi/build_wheels.py \
             --dist "${{ runner.temp }}/dist" \
             --out "${{ runner.temp }}/wheels" \
@@ -157,9 +157,9 @@ jobs:
       # 6 種のうち Linux x86_64 を実際に入れて動かし、版が tag と一致することを確かめてから公開する。
       - name: Smoke test wheel
         env:
-          PLUS_VERSION: ${{ needs.release-please.outputs.tag_name }}
+          GMN_RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          version="${PLUS_VERSION#gmn-v}"
+          version="${GMN_RELEASE_TAG#gmn-v}"
           wheel=$(ls "${{ runner.temp }}"/wheels/*manylinux_2_17_x86_64*.whl)
           out=$(uvx --from "$wheel" gmn-cli --version | head -n 1)
           echo "$out"
@@ -219,9 +219,9 @@ jobs:
 
       - name: Build npm packages
         env:
-          PLUS_VERSION: ${{ needs.release-please.outputs.tag_name }}
+          GMN_RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          version="${PLUS_VERSION#gmn-v}"
+          version="${GMN_RELEASE_TAG#gmn-v}"
           node packaging/npm/build.mjs \
             --dist "${{ runner.temp }}/dist" \
             --out "${{ runner.temp }}/npm" \
@@ -230,9 +230,9 @@ jobs:
       # Linux x64 の OS 用バイナリを直接動かし、版が tag と一致することを確かめてから公開する。
       - name: Smoke test native binary
         env:
-          PLUS_VERSION: ${{ needs.release-please.outputs.tag_name }}
+          GMN_RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          version="${PLUS_VERSION#gmn-v}"
+          version="${GMN_RELEASE_TAG#gmn-v}"
           out=$("${{ runner.temp }}/npm/gmn-cli-linux-x64/gmn" --version | head -n 1)
           echo "$out"
           case "$out" in
@@ -249,10 +249,10 @@ jobs:
       - name: Publish to npm
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          PLUS_VERSION: ${{ needs.release-please.outputs.tag_name }}
+          GMN_RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         run: |
           set -euo pipefail
-          version="${PLUS_VERSION#gmn-v}"
+          version="${GMN_RELEASE_TAG#gmn-v}"
           case "$version" in
             *-*) dist_tag=next ;;
             *) dist_tag=latest ;;

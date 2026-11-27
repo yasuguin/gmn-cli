@@ -1,0 +1,37 @@
+name: changelog label
+
+# PR の題（conventional commit の形）から、変更履歴の分類のラベルを 1 つ付ける。
+# GitHub のリリースノートの生成（.github/release.yml）がこのラベルで分類し、利用者に関係しない PR を外す。
+# dev-policy: keep-pull_request — PR の題に合わせてラベルを付ける仕組みなので、PR で起動しないと意味がない。
+# 中身はラベルの付け替えだけで、数秒で終わる。
+on:
+    pull_request:
+        types: [opened, edited, reopened]
+
+permissions:
+    contents: read
+    pull-requests: write
+
+jobs:
+    label:
+        # Dependabot の PR では GITHUB_TOKEN が読み取り専用でラベルを付けられないので、.github/dependabot.yml の labels に任せる。
+        if: github.actor != 'dependabot[bot]'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Set changelog label
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  PR: ${{ github.event.pull_request.number }}
+                  TITLE: ${{ github.event.pull_request.title }}
+              run: |
+                  want=$(bash scripts/gmn/changelog-label.sh "$TITLE")
+                  # 題を変えたときに古い分類が残らないよう、ほかの changelog: ラベルを外してから付ける。
+                  for label in "changelog: feat" "changelog: fix" "changelog: upstream" "changelog: skip"; do
+                      if [ "$label" != "$want" ]; then
+                          gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label "$label" >/dev/null 2>&1 || true
+                      fi
+                  done
+                  gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --add-label "$want"
+                  echo "ラベル: $want"

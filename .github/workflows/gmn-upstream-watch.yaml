@@ -1,0 +1,59 @@
+name: gmn upstream watch
+
+# 本家の最新リリースが fork の main に取り込まれていなければ、取り込みの PR を作る。
+# 衝突したら PR は作らず issue を立てる。中身は scripts/gmn/upstream-sync-pr.sh。
+# 追うのは本家のリリースだけ。GitHub の「Sync fork」（本家の main を直接 merge する）は使わない
+# （main は ruleset で PR 必須。未リリースの本家の変更を公開物に入れない。docs/adr/0002）。
+on:
+    schedule:
+        # 週 1 回（月曜 09:00 JST の少し前）。毎時 0 分は GitHub Actions の負荷が集中して遅れ・欠落が起きやすいので 6 分前にずらす。
+        - cron: "54 23 * * 0"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    watch:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        env:
+            UPSTREAM_REPO: google-gemini/gemini-api-cli
+        steps:
+            # bot（GitHub App gmn-cli-bot）の token で PR を作る。既定の GITHUB_TOKEN で作った PR では、
+            # 必須チェック（noreply）や CI が起動しないため。
+            - name: Create bot token
+              id: app-token
+              uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+              with:
+                  client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+                  private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+                  token: ${{ steps.app-token.outputs.token }}
+
+            # 取り込みの merge commit を bot の noreply アドレスで作る（PR の noreply の検査を通すため）。
+            - name: Set bot identity
+              env:
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
+                  APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+              run: |
+                  id=$(gh api "users/${APP_SLUG}[bot]" --jq .id)
+                  git config user.name "${APP_SLUG}[bot]"
+                  git config user.email "${id}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+            - name: 本家の最新リリースを取る
+              id: latest
+              env:
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
+              run: |
+                  tag=$(gh release view --repo "$UPSTREAM_REPO" --json tagName --jq .tagName)
+                  echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+            - name: 取り込みの PR を作る（衝突なら issue）
+              env:
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
+                  TAG: ${{ steps.latest.outputs.tag }}
+              run: bash scripts/gmn/upstream-sync-pr.sh "$TAG"

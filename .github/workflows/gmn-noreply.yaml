@@ -1,0 +1,56 @@
+name: noreply
+
+# PR の commit が GitHub の noreply アドレスで作られているかを確かめる（公開 repo の履歴に個人のアドレスを残さない）。
+# main の ruleset の必須チェック。job 名 noreply を変えると ruleset の設定も直す必要がある。
+# dev-policy: pr-only — PR の commit を見る必須チェックなので、PR で起動しないと意味がない（#21・#22）。週 1 回に起動しても検査する対象が無い。
+# 中身は一時 repo のテストと git log だけで、数秒で終わる。
+on:
+    pull_request:
+        # edited: PR の base を変えたときに、範囲が変わるので検査し直す。
+        types: [opened, synchronize, reopened, edited]
+
+permissions:
+    contents: read
+
+jobs:
+    noreply:
+        runs-on: ubuntu-latest
+        env:
+            UPSTREAM_URL: https://github.com/google-gemini/gemini-api-cli.git
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.event.pull_request.head.sha }}
+
+            # 検査のテスト自体を先に回す（軽い。一時 repo だけで完結する）。
+            - name: Test the check
+              run: bash scripts/gmn/check-noreply_test.sh
+
+            # 本家の取り込みのスクリプトは週 1 回の workflow でしか動かないので、壊れても気づきにくい。
+            # ここで一緒にテストする（偽の本家 repo と偽の gh・go で完結し、数秒で終わる）。
+            - name: Test the upstream sync scripts
+              run: |
+                  bash scripts/gmn/sync-upstream_test.sh
+                  bash scripts/gmn/upstream-sync-pr_test.sh
+                  bash scripts/gmn/changelog-label_test.sh
+
+            # 本家の commit は作者のアドレスを変えられないので対象外にする。本家の main とタグを refs/upstream/ に入れる。
+            - name: Fetch upstream
+              run: git fetch --no-tags "$UPSTREAM_URL" '+refs/heads/main:refs/upstream/main' '+refs/tags/*:refs/upstream/tags/*'
+
+            # 判定には base 側の検査スクリプトを使う。PR 側のスクリプトだと、PR が自分を判定する検査を書き換えられるため。
+            # base にまだスクリプトが無いとき（スクリプトを入れる PR 自身）だけ、PR 側のものを使う。
+            - name: Check commit addresses
+              env:
+                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+              run: |
+                  checker="$RUNNER_TEMP/check-noreply.sh"
+                  if git cat-file -e "$BASE_SHA:scripts/gmn/check-noreply.sh" 2>/dev/null; then
+                      git show "$BASE_SHA:scripts/gmn/check-noreply.sh" >"$checker"
+                  else
+                      echo "::notice::base に検査スクリプトが無いので、PR 側のものを使う"
+                      cp scripts/gmn/check-noreply.sh "$checker"
+                  fi
+                  bash "$checker" "$BASE_SHA" "$HEAD_SHA"

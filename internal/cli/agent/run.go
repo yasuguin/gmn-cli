@@ -26,8 +26,8 @@ import (
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 
-	"github.com/google-gemini/gemini-api-cli/internal/plus/gencontent"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/music"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/gencontent"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/music"
 )
 
 var runCmdMeta = []flagutil.FlagMeta{
@@ -148,10 +148,10 @@ func executeRunCmd(cmd *cobra.Command, args []string, asyncIntent bool) (*operat
 	if err != nil {
 		return nil, flagutil.WithCLIValidation(err)
 	}
-	if handled, err := gencontent.TryImage(cmd, req.Body); handled { // plus: Agent Platform の image は generateContent で呼ぶ
+	if handled, err := gencontent.TryImage(cmd, req.Body); handled { // gmn: Agent Platform の image は generateContent で呼ぶ
 		return nil, err
 	}
-	if handled, err := music.Try(cmd, req.Body); handled { // plus: Agent Platform の music は本文と応答の形を直して送る
+	if handled, err := music.Try(cmd, req.Body); handled { // gmn: Agent Platform の music は本文と応答の形を直して送る
 		return nil, err
 	}
 	s, err := client.NewClient(cmd)

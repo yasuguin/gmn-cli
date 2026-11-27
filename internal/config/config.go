@@ -35,7 +35,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google-gemini/gemini-api-cli/internal/flagutil"
-	"github.com/google-gemini/gemini-api-cli/internal/plus"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -71,9 +71,9 @@ type Config struct {
 	RetryMaxElapsedTime   string         `yaml:"retry_max_elapsed_time,omitempty"`
 	RetryConnectionErrors string         `yaml:"retry_connection_errors,omitempty"`
 	RetryConfig           string         `yaml:"retry_config,omitempty"`
-	Backend               string         `yaml:"backend,omitempty"`  // plus: gmn の接続先
-	Project               string         `yaml:"project,omitempty"`  // plus: Agent Platform の project
-	Location              string         `yaml:"location,omitempty"` // plus: Agent Platform の location
+	Backend               string         `yaml:"backend,omitempty"`  // gmn: gmn の接続先
+	Project               string         `yaml:"project,omitempty"`  // gmn: Agent Platform の project
+	Location              string         `yaml:"location,omitempty"` // gmn: Agent Platform の location
 }
 
 var (
@@ -201,11 +201,11 @@ func GetConfigValue(key string) string {
 		return cfg.Globals.ApiRevision
 	case "user-project":
 		return cfg.Globals.UserProject
-	case "backend": // plus:
+	case "backend": // gmn:
 		return cfg.Backend
-	case "project": // plus:
+	case "project": // gmn:
 		return cfg.Project
-	case "location": // plus:
+	case "location": // gmn:
 		return cfg.Location
 	}
 	return ""
@@ -348,7 +348,7 @@ func ResolveTokenCredential(cmd *cobra.Command, flagName string) (value, source 
 // This is used for security fields (tokens, API keys, passwords). For global
 // parameters, use ResolveCredential which skips the keyring tier.
 func ResolveSecurityCredential(cmd *cobra.Command, flagName string) (value, source string) {
-	if plus.SkipCredential(flagName) { // plus: Agent Platform では API key を使わない
+	if gmn.SkipCredential(flagName) { // gmn: Agent Platform では API key を使わない
 		return "", "unset"
 	}
 	if val, source := ResolveExplicitSecurityCredential(cmd, flagName); val != "" {
@@ -366,7 +366,7 @@ func ResolveSecurityCredential(cmd *cobra.Command, flagName string) (value, sour
 // ResolveExplicitSecurityCredential resolves a security credential from the
 // flag or env var only, without touching the OS keychain or the config file.
 func ResolveExplicitSecurityCredential(cmd *cobra.Command, flagName string) (value, source string) {
-	if plus.SkipCredential(flagName) { // plus: Agent Platform では API key を使わない
+	if gmn.SkipCredential(flagName) { // gmn: Agent Platform では API key を使わない
 		return "", "unset"
 	}
 	if val, changed := flagutil.GetStringFlag(cmd, flagName); changed && val != "" {
@@ -380,7 +380,7 @@ func ResolveExplicitSecurityCredential(cmd *cobra.Command, flagName string) (val
 
 // ResolveRequestSecurityCredential skips the OS keychain on --dry-run (keychain reads can prompt).
 func ResolveRequestSecurityCredential(cmd *cobra.Command, flagName string) (value, source string) {
-	if plus.SkipCredential(flagName) { // plus: Agent Platform では API key を使わない
+	if gmn.SkipCredential(flagName) { // gmn: Agent Platform では API key を使わない
 		return "", "unset"
 	}
 	if val, source := ResolveExplicitSecurityCredential(cmd, flagName); val != "" {

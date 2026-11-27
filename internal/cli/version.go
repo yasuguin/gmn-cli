@@ -19,8 +19,8 @@ package cli
 import (
 	"fmt"
 
+	"github.com/google-gemini/gemini-api-cli/internal/gmn"
 	"github.com/google-gemini/gemini-api-cli/internal/output"
-	"github.com/google-gemini/gemini-api-cli/internal/plus"
 	"github.com/google-gemini/gemini-api-cli/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -67,14 +67,14 @@ func versionFlagRequested(cmd *cobra.Command) bool {
 func printVersion(cmd *cobra.Command) error {
 	if output.IsMachineMode(cmd) {
 		info := map[string]any{"name": "gemini-api", "version": Version}
-		plus.AnnotateVersionInfo(info, Version) // plus: fork の版と土台の本家版を機械可読出力に入れる
+		gmn.AnnotateVersionInfo(info, Version) // gmn: fork の版と土台の本家版を機械可読出力に入れる
 		if BuildTime != "" {
 			info["build_time"] = BuildTime
 		}
 		return output.LocalResult(cmd, info)
 	}
-	// plus: fork では 1 行目を「fork 名 fork 版 (base 本家名 本家版)」にする
-	if _, err := fmt.Fprintln(cmd.OutOrStdout(), plus.VersionHeader(fmt.Sprintf("gemini-api %s", Version), Version)); err != nil {
+	// gmn: fork では 1 行目を「fork 名 fork 版 (base 本家名 本家版)」にする
+	if _, err := fmt.Fprintln(cmd.OutOrStdout(), gmn.VersionHeader(fmt.Sprintf("gemini-api %s", Version), Version)); err != nil {
 		return err
 	}
 	if BuildTime != "" {

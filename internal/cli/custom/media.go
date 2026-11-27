@@ -45,9 +45,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	// plus: gs:// の入力と案内（media_plus.go）。本家の import 行の並びを変えないよう別の塊に置く。
-	"github.com/google-gemini/gemini-api-cli/internal/plus"
-	"github.com/google-gemini/gemini-api-cli/internal/plus/gcsinput"
+	// gmn: gs:// の入力と案内（media_gmn.go）。本家の import 行の並びを変えないよう別の塊に置く。
+	"github.com/google-gemini/gemini-api-cli/internal/gmn"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/gcsinput"
 )
 
 // maxInlineRequestBytes is the CLI's conservative budget for one interaction
@@ -359,7 +359,7 @@ const (
 	mediaInputLocal mediaInputKind = iota
 	mediaInputRemoteFile
 	mediaInputYouTube
-	// plus: gs:// の URI。Agent Platform でだけ受け、読まずに URI として送る。
+	// gmn: gs:// の URI。Agent Platform でだけ受け、読まずに URI として送る。
 	mediaInputGCS
 )
 
@@ -378,8 +378,8 @@ func classifyMediaInput(cmd *cobra.Command, arg, ref string, allowYouTube bool) 
 		}
 		return mediaInputYouTube, nil
 	}
-	// plus: gs:// は Agent Platform でだけ受ける。Gemini API では本家の扱い（ローカル探索）に流さず止める。
-	if plus.Enabled() && gcsinput.IsURI(arg) {
+	// gmn: gs:// は Agent Platform でだけ受ける。Gemini API では本家の扱い（ローカル探索）に流さず止める。
+	if gmn.Enabled() && gcsinput.IsURI(arg) {
 		if !onAgentPlatform(cmd) {
 			return 0, usageError(ref+": gs:// URIs are only supported on Agent Platform; the Gemini API cannot read Cloud Storage",
 				"Pass --backend vertex (or set GOOGLE_GENAI_USE_VERTEXAI=true) to send the gs:// URI",
@@ -450,7 +450,7 @@ func checkLocalFile(path, mimeOverride, ref string, policy mediaPolicy, agentPla
 	}
 	if cost > maxInlineBytes {
 		return 0, "", usageError(
-			// plus: Agent Platform では Files API の案内を出さず、gs:// に置く直し方を示す。
+			// gmn: Agent Platform では Files API の案内を出さず、gs:// に置く直し方を示す。
 			fmt.Sprintf("%s: file is %d bytes (%d as base64); this CLI keeps inline requests under %d MB", ref, info.Size(), cost, maxInlineRequestBytes>>20),
 			overflowHint(path, agentPlatform))
 	}
@@ -484,7 +484,7 @@ func probeLocalFile(path, mimeType, ref string) error {
 // or sent. Probing each file also catches permissions and mislabelled text.
 func prevalidateMediaInputs(cmd *cobra.Command, inputs []string, mimeOverride string, policy mediaPolicy) error {
 	var inlineBytes int64
-	// plus: gs:// の入力は URI として検証する（ローカル探索とは別経路）。
+	// gmn: gs:// の入力は URI として検証する（ローカル探索とは別経路）。
 	agentPlatform := onAgentPlatform(cmd)
 	for i, raw := range inputs {
 		arg := strings.TrimSpace(raw)

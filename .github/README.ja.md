@@ -84,7 +84,7 @@ uv tool install gmn-cli
 ### インストールスクリプト（macOS・Linux）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/gmn/install.sh | bash
 ```
 
 [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。照合に失敗したら何も入れません。書き込めれば `/usr/local/bin` に、書き込めなければ `~/.local/bin` に入れます。
@@ -92,7 +92,7 @@ curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/
 入れる場所や版を決めるときは、`GMN_INSTALL_DIR` と `GMN_VERSION` を渡します。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | GMN_INSTALL_DIR="$HOME/bin" GMN_VERSION=0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/gmn/install.sh | GMN_INSTALL_DIR="$HOME/bin" GMN_VERSION=0.1.0 bash
 ```
 
 ### Windows
@@ -220,4 +220,4 @@ API キーは Agent Platform には送信されません。
 
 ## ライセンス
 
-upstream と同じく Apache-2.0 です。[LICENSE](../LICENSE) を参照してください。本 fork で変更されたファイルには `plus:` コメントが付いています。
+upstream と同じく Apache-2.0 です。[LICENSE](../LICENSE) を参照してください。本 fork で変更されたファイルには `gmn:` コメントが付いています。

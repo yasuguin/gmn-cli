@@ -7,14 +7,14 @@
 ## 変更の入れ方
 
 - main への直接 push・強制 push・削除は、ruleset で拒否されます。ブランチを切って PR を出してください。
-- ブランチ名は `gmn/<内容>`（例: `gmn/next-0.1.2`）にします。`plus` は fork の差し込みの層（`internal/plus/`・`scripts/plus/`・commit の scope）の名前なので、ブランチには使いません。自動で作られる `release-please--…`・`upstream-sync/<tag>`・`dependabot/…` はそのままです。ほかの名前の PR は、必須チェック `branch-name` が落ちます。
+- ブランチ名は `gmn/<内容>`（例: `gmn/next-0.1.2`）にします。fork の差し込みの層（`internal/gmn/`・`scripts/gmn/`・`// gmn:` の印・commit の scope）も同じ `gmn` の名前です。自動で作られる `release-please--…`・`upstream-sync/<tag>`・`dependabot/…` はそのままです。ほかの名前の PR は、必須チェック `branch-name` が落ちます。
 - commit は GitHub の noreply アドレスで作ります。clone したら最初に設定してください。
   ```sh
   git config user.email "<ID>+<ユーザー名>@users.noreply.github.com"
   ```
   PR に noreply 以外のアドレスの commit が混ざると、必須チェック `noreply` が落ちます。落ちたときは、出力の直し方に従ってください。
-- 通常の PR は squash でマージします。PR の題が main の 1 commit になるので、題は conventional commit の形で、利用者に見える変化を英語で書きます（例 `fix(plus): publish the npm package under @yasuguin/gmn-cli`）。題は `CHANGELOG.md` と GitHub Release に載って外の人が読むためです。本文と commit の本文は日本語で書きます。日本語の入った題や形の違う題の PR は、必須チェック `pr-title` が落ちます。
-- 本家の取り込みの PR だけは merge commit でマージします。本家の履歴を残し、次の取り込みの基点を崩さないためです（`scripts/plus/sync-upstream.sh` は rebase しない前提）。取り込みの PR は、週 1 回の workflow `plus upstream watch` が GitHub App `gmn-cli-bot` で自動で作ります。衝突したときは issue になるので、`.agents/skills/plus-upstream-sync/SKILL.md` の手順で手元で取り込みます。
+- 通常の PR は squash でマージします。PR の題が main の 1 commit になるので、題は conventional commit の形で、利用者に見える変化を英語で書きます（例 `fix(gmn): publish the npm package under @yasuguin/gmn-cli`）。題は `CHANGELOG.md` と GitHub Release に載って外の人が読むためです。本文と commit の本文は日本語で書きます。日本語の入った題や形の違う題の PR は、必須チェック `pr-title` が落ちます。
+- 本家の取り込みの PR だけは merge commit でマージします。本家の履歴を残し、次の取り込みの基点を崩さないためです（`scripts/gmn/sync-upstream.sh` は rebase しない前提）。取り込みの PR は、週 1 回の workflow `gmn upstream watch` が GitHub App `gmn-cli-bot` で自動で作ります。衝突したときは issue になるので、`.agents/skills/gmn-upstream-sync/SKILL.md` の手順で手元で取り込みます。
 
 - Dependabot は脆弱性の修正の PR だけを出します（`.github/dependabot.yml`）。Go の依存は `fix(deps): …` で patch を上げ、GitHub Actions は `ci(deps): …` で版を上げません。脆弱性の報告の受け方は [SECURITY.md](SECURITY.md)。
 

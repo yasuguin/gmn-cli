@@ -5,7 +5,7 @@ package main
 import (
 	"os"
 
-	"github.com/google-gemini/gemini-api-cli/internal/plus/app"
+	"github.com/google-gemini/gemini-api-cli/internal/gmn/app"
 )
 
 func main() {
