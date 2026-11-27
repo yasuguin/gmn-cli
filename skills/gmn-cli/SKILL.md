@@ -95,13 +95,19 @@ gmn models list -o json
 gmn agent run --help
 ```
 
-Use `--help` on the subcommand before you guess a flag. Do not invent flags.
+Use `--help` on the subcommand before you guess a flag. Do not invent flags. Global flags (auth, network, output) are listed only in `gmn --help-global`, not in `gmn <command> --help`.
 
 ## 6. Flags for agents
 
+- `--timeout <duration>` (for example `3m`): always pass it from scripts and agents. Without it there is no deadline, and a call that gets no response waits forever. The deadline covers the whole call, including a streamed reply. When it runs out, the CLI exits 1 with `connection_error: context deadline exceeded`. Thinking models can take a while before the first token, so leave room.
+- Retries: transient errors such as 503 are retried automatically with backoff, for up to about 30 seconds in total. Do not wrap the CLI in your own retry loop.
+- `--stdin` and `--system <text>` on `generate`: read the prompt from stdin and set the system instruction. Use them for long or multi-line text instead of putting it in the positional prompt, for example `gmn generate --system "$(cat instructions.md)" --stdin < draft.md`.
+- Output of `generate`: by default it streams only the reply text to stdout and prints the `Interaction ID` to stderr, so `> out.md` captures just the text. `--stream=false` prints the whole interaction object instead (pretty YAML). To get only the text from it, add `--jq '[.steps[] | select(.type=="model_output") | .content[] | select(.type=="text") | .text] | join("")'`.
+- `--no-interactive`: never prompt or open a form. Use it in CI and other runs with no one to answer.
 - `--dry-run`: builds the request and prints it without sending. Use it to check the URL, the backend, and the body before a paid call. Credentials are masked.
 - `--agent-mode`: structured errors with the fix in each error. Use it when you parse failures.
 - `-o json` or `--jq '<expr>'`: machine-readable output. Use `--jq` to pick a field.
+- `-d` / `--debug`: logs the request and response to stderr. Use it when an error does not explain itself.
 - `--usage`: prints the command schema in KDL, for discovering flags.
 
 Exit codes: 0 ok, 1 runtime error, 2 usage error (including a command Agent Platform does not serve), 3 authentication or authorization error.
