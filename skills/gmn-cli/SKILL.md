@@ -20,7 +20,7 @@ Run this before any real call:
 gmn whoami
 ```
 
-It prints the resolved `backend`, `project`, and `location`, and where each value came from (flag, env, config, or default). Check that the project is the one you expect before a call that costs money.
+It prints the resolved `backend`, `project`, and `location`, and where each value came from (flag, env, config, or default). Check that the project is the one you expect before a call that costs money. With `--backend vertex`, the `auth` line also shows which credential ADC will use: the `GOOGLE_APPLICATION_CREDENTIALS` file (with its type and service account), the gcloud ADC file, or the metadata server.
 
 Backend resolution order (first match wins):
 
@@ -46,6 +46,7 @@ When Agent Platform auth fails, the error names the fix. Typical fixes:
 
 - No ADC found: `gcloud auth application-default login`, or set `GOOGLE_APPLICATION_CREDENTIALS`.
 - Token could not be refreshed: run `gcloud auth application-default login` again.
+- Permission denied (403) although the user is logged in: run `gmn whoami --backend vertex` and read the `auth` line. If it says `GOOGLE_APPLICATION_CREDENTIALS`, that file is used and the gcloud login is ignored, so logging in again does not help. Ask the user whether to unset the variable for this call (`env -u GOOGLE_APPLICATION_CREDENTIALS gmn ...`) or grant that account access.
 - No project: pass `--project`, set `GOOGLE_CLOUD_PROJECT`, or add `project:` to the config file.
 
 Do not switch to an API key to get past an Agent Platform error. The CLI does not send an API key to Agent Platform.
