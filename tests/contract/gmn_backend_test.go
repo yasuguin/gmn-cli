@@ -126,12 +126,12 @@ func TestGmnBackendフラグは環境変数に環境変数は設定に勝つ(t *
 func TestGmnBackendVertexはAPIキーを送らずBearerとuserProjectを送る(t *testing.T) {
 	var gotHeaders http.Header
 	var gotPath string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotHeaders = r.Header.Clone()
 		gotPath = r.URL.Path
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"id":"i","status":"completed"}`)
-	}))
+	})))
 	defer server.Close()
 
 	// API key が環境変数・フラグのどちらにあっても送らない
@@ -159,11 +159,11 @@ func TestGmnBackendVertexはAPIキーを送らずBearerとuserProjectを送る(t
 
 func TestGmnBackend明示のuserProjectはprojectより優先する(t *testing.T) {
 	var got string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		got = r.Header.Get("x-goog-user-project")
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"id":"i","status":"completed"}`)
-	}))
+	})))
 	defer server.Close()
 	result := runGmn(t, t.TempDir(), nil, "--no-interactive", "--no-keyring", "--no-retries", "-o", "json",
 		"--backend", "vertex", "--project", "my-proj", "--user-project", "billing-proj", "--access-token", "t",
@@ -178,11 +178,11 @@ func TestGmnBackend明示のuserProjectはprojectより優先する(t *testing.T
 
 func TestGmnBackendGeminiAPIではAPIキーを送りBearerを送らない(t *testing.T) {
 	var gotHeaders http.Header
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotHeaders = r.Header.Clone()
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"id":"i","status":"completed"}`)
-	}))
+	})))
 	defer server.Close()
 	result := runGmn(t, t.TempDir(), nil, "--no-interactive", "--no-keyring", "--no-retries", "-o", "json",
 		"--api-key", "K1", "--server-url", server.URL, "generate", "hi", "--stream=false")

@@ -48,7 +48,7 @@ type interactionStub struct {
 func newInteractionStub(t *testing.T, response string) *interactionStub {
 	t.Helper()
 	stub := &interactionStub{}
-	stub.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	stub.Server = httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { // gmn: gmn 以外のプロセスからのリクエストを数えない
 		if r.URL.Path != "/v1beta/interactions" {
 			t.Errorf("request path = %q, want /v1beta/interactions", r.URL.Path)
 		}
@@ -68,7 +68,7 @@ func newInteractionStub(t *testing.T, response string) *interactionStub {
 		stub.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, response)
-	}))
+	})))
 	t.Cleanup(stub.Close)
 	return stub
 }
