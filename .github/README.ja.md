@@ -19,7 +19,7 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## 違い
 
 - Gemini API（デフォルト）: upstream と同じ動作です。
-- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。`aiplatform.googleapis.com` のデータアクセス監査ログはデフォルトで無効なので、呼び出しを記録するにはプロジェクトで有効にしてください。upstream にも同じ[機能要望](https://github.com/google-gemini/gemini-api-cli/issues/241)が出ています。
+- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。`aiplatform.googleapis.com` のデータアクセス監査ログはデフォルトで無効なので、呼び出しを記録するにはプロジェクトで有効にしてください。有効にすると、Interactions API の呼び出し（`generate`）も `generateContent` の呼び出し（`image`）も、呼び出したアカウント付きで記録されます（2026-11-27 に確認。設定が効くまで 1〜2 分かかりました）。upstream にも同じ[機能要望](https://github.com/google-gemini/gemini-api-cli/issues/241)が出ています。
 - 設定ファイルの場所とコマンド名が分かれているため、両方の CLI を同時にインストールできます。
 
 ## インストール
