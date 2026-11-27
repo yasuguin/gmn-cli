@@ -1,0 +1,41 @@
+name: pr-title
+
+# PR の題が英語の conventional commit の形かを確かめる（.github/CONTRIBUTING.md）。
+# 題は squash で main の 1 commit になり、CHANGELOG.md と GitHub Release に載る。
+# main の ruleset の必須チェック。job 名 pr-title を変えると ruleset の設定も直す必要がある。
+# dev-policy: pr-only — PR の題を見る必須チェックなので、PR で起動しないと意味がない。週 1 回に起動しても検査する対象が無い。
+# 中身は題の正規表現だけで、数秒で終わる。題を直したら（edited）検査し直す。
+on:
+    pull_request:
+        types: [opened, edited, synchronize, reopened]
+
+permissions:
+    contents: read
+
+jobs:
+    pr-title:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.event.pull_request.head.sha }}
+
+            - name: Test the check
+              run: bash scripts/plus/check-pr-title_test.sh
+
+            # branch-name と同じく、判定には base 側のスクリプトを使う（PR が自分を判定する検査を書き換えられないように）。
+            # base にまだスクリプトが無いとき（スクリプトを入れる PR 自身）だけ、PR 側のものを使う。
+            - name: Check PR title
+              env:
+                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                  TITLE: ${{ github.event.pull_request.title }}
+              run: |
+                  checker="$RUNNER_TEMP/check-pr-title.sh"
+                  if git cat-file -e "$BASE_SHA:scripts/plus/check-pr-title.sh" 2>/dev/null; then
+                      git show "$BASE_SHA:scripts/plus/check-pr-title.sh" >"$checker"
+                  else
+                      echo "::notice::base に検査スクリプトが無いので、PR 側のものを使う"
+                      cp scripts/plus/check-pr-title.sh "$checker"
+                  fi
+                  bash "$checker" "$TITLE"

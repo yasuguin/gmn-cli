@@ -1,7 +1,7 @@
 {
   "name": "@yasuguin/gmn-cli",
   "version": "0.0.0",
-  "description": "Unofficial fork of google-gemini/gemini-api-cli for agents, scripts, and CI. Not affiliated with Google.",
+  "description": "Unofficial fork of google-gemini/gemini-api-cli for agents, scripts, and CI. Not affiliated with Google. / エージェント・スクリプト・CI 向けの google-gemini/gemini-api-cli の非公式の fork。Google とは関係ありません。",
   "license": "Apache-2.0",
   "homepage": "https://github.com/yasuguin/gmn-cli",
   "repository": {

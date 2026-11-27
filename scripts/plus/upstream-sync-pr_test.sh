@@ -91,8 +91,8 @@ else
 fi
 
 # (b) PR の題は conventional commit の形で、本家の版を含む。
-if grep -q "^pr create .*--title chore(upstream): 本家 v0.5.0 を取り込む" "$FAKE_GH_LOG"; then
-  ok "(b) PR の題は chore(upstream): 本家 v0.5.0 を取り込む"
+if grep -q "^pr create .*--title chore(upstream): sync upstream v0.5.0" "$FAKE_GH_LOG"; then
+  ok "(b) PR の題は chore(upstream): sync upstream v0.5.0"
 else
   ng "(b) PR の題が違う: $(cat "$FAKE_GH_LOG")"
 fi

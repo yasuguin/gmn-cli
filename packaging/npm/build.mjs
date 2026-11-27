@@ -93,7 +93,7 @@ function buildOsPackage(entry, { dist, out, version, scratch, license, readme })
   writeJson(join(dir, 'package.json'), {
     name,
     version,
-    description: 'Native binary of gmn-cli (unofficial fork of google-gemini/gemini-api-cli). Not affiliated with Google.',
+    description: 'Native binary of gmn-cli (unofficial fork of google-gemini/gemini-api-cli). Not affiliated with Google. / gmn-cli（google-gemini/gemini-api-cli の非公式の fork）のネイティブのバイナリ。Google とは関係ありません。',
     license: 'Apache-2.0',
     repository: { type: 'git', url: 'git+https://github.com/yasuguin/gmn-cli.git' },
     // os・cpu が一致する環境にだけ入る。ほかの環境では本体の optionalDependencies から外れる。

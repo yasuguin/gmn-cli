@@ -74,7 +74,7 @@ if bash scripts/plus/sync-upstream.sh --skip-tests "$tag"; then
 - merge 後に確かめることは \`${SKILL_PATH}\` に書いてある。
 BODY
 	)
-	gh pr create --base main --head "$branch" --title "chore(upstream): 本家 ${tag} を取り込む" --label "$LABEL" --body "$body"
+	gh pr create --base main --head "$branch" --title "chore(upstream): sync upstream ${tag}" --label "$LABEL" --body "$body"
 	exit 0
 fi
 

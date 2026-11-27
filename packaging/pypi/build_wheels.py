@@ -22,7 +22,7 @@ ROOT = HERE.parent.parent
 
 DIST_NAME = "gmn_cli"  # wheel のファイル名に使う正規化された名前
 PROJECT_NAME = "gmn-cli"
-SUMMARY = "Unofficial fork of google-gemini/gemini-api-cli. Not affiliated with Google."
+SUMMARY = "Unofficial fork of google-gemini/gemini-api-cli. Not affiliated with Google. / google-gemini/gemini-api-cli の非公式の fork。Google とは関係ありません。"
 
 # goreleaser のアーカイブ名（{Os}_{arch}）→ wheel の platform tag。
 # macOS は Go の既定の最低版（バイナリの LC_BUILD_VERSION minos が 13.0）に合わせる。

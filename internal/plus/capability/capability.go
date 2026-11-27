@@ -62,7 +62,7 @@ var table = map[string]Entry{
 	// 未確認（smoke で確定するまで止めない）
 	"music":  {Kind: Unverified},
 	"video":  {Kind: Unverified},
-	"models": {Kind: Unverified, Note: "list・get の対応は #9 で確定する"},
+	"models": {Kind: Unverified},
 
 	// gs:// を使う
 	"files upload": {Kind: GCS, Note: "local files cannot be uploaded (Agent Platform has no Files API)"},

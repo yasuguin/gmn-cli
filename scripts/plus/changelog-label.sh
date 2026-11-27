@@ -2,9 +2,9 @@
 # PR の題（conventional commit の形）から、変更履歴の分類のラベルを 1 つ出す。
 # GitHub のリリースノートの生成（.github/release.yml）がこのラベルで分類し、利用者に関係しない PR を外す。
 #
-#   feat           -> changelog: feat     （機能）
-#   fix            -> changelog: fix      （修正）
-#   chore(upstream)-> changelog: upstream （本家の取り込み）
+#   feat           -> changelog: feat     （Features）
+#   fix            -> changelog: fix      （Fixes）
+#   chore(upstream)-> changelog: upstream （Upstream sync）
 #   それ以外       -> changelog: skip     （ci・docs・refactor・リリース PR など。変更履歴に載せない）
 #
 # 使い方: scripts/plus/changelog-label.sh "<PR の題>"
