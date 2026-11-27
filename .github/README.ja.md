@@ -19,13 +19,12 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## 違い
 
 - Gemini API（デフォルト）: upstream と同じ動作です。
-- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。
+- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。upstream にも同じ[機能要望](https://github.com/google-gemini/gemini-api-cli/issues/241)が出ています。
 - 設定ファイルの場所とコマンド名が分かれているため、両方の CLI を同時にインストールできます。
-- upstream での機能要望: [google-gemini/gemini-api-cli#241](https://github.com/google-gemini/gemini-api-cli/issues/241)
 
 ## インストール
 
-どれか 1 つを選んでください。どの方法でも同じ `gmn` のバイナリが入ります。
+どれか 1 つを選んでください。どの方法でも同じ `gmn` のバイナリを使います。
 
 ### Homebrew（macOS）
 
@@ -47,24 +46,36 @@ npm から入れます。GitHub への通信が止められたネットワーク
 mise use -g npm:@yasuguin/gmn-cli
 ```
 
-### npm（入れずに実行）
+### npm
+
+入れずに実行する:
 
 ```bash
 npx @yasuguin/gmn-cli --help
 ```
 
-pnpm なら:
-
 ```bash
 pnpm dlx @yasuguin/gmn-cli --help
 ```
 
-### PyPI（uvx）
+グローバルに入れる:
 
-`gmn` と `gmn-cli` の 2 つのコマンドが使えます。
+```bash
+pnpm add -g @yasuguin/gmn-cli
+```
+
+### PyPI
+
+入れずに実行する:
 
 ```bash
 uvx gmn-cli --help
+```
+
+ツールとして入れる。`gmn` と `gmn-cli` の 2 つのコマンドが使えます。
+
+```bash
+uv tool install gmn-cli
 ```
 
 ### インストールスクリプト（macOS・Linux）
@@ -107,6 +118,14 @@ gmn generate "Write a haiku about APIs"
 
 課金が発生する呼び出しの前に `whoami` で確認してください。バックエンド、プロジェクト、ロケーションと、それぞれの参照元が表示されます。
 
+## エージェントから使う
+
+コーディングエージェントに `gmn` の呼び方を教える agent skill（[skills/gmn-cli](../skills/gmn-cli/SKILL.md)）を同梱しています。[skills](https://github.com/vercel-labs/skills) CLI で入れられます。
+
+```bash
+npx skills add yasuguin/gmn-cli
+```
+
 ## Agent Platform の設定
 
 各設定は以下の順序で読み込まれ、最初に設定されていたものが優先されます。
@@ -130,6 +149,16 @@ location: global
 トークンはリクエストごとに更新されるため、長時間の実行（動画のポーリングやエージェントの長時間実行など）でも期限切れで失敗しません。クォータプロジェクトには、`--user-project` を指定しない限り `--project` の値が使われます。
 
 API キーは Agent Platform には送信されません。
+
+環境変数:
+
+| 変数 | 既定値 | 説明 |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | なし | Gemini API の API キー。Agent Platform には送信されません。 |
+| `GOOGLE_GENAI_USE_VERTEXAI` | `false` | `true` か `1` で Agent Platform を使います。 |
+| `GOOGLE_CLOUD_PROJECT` | なし | Agent Platform で使う Google Cloud のプロジェクト。 |
+| `GOOGLE_CLOUD_LOCATION` | `global` | Agent Platform のロケーション。 |
+| `GOOGLE_APPLICATION_CREDENTIALS` | なし | ADC の認証情報ファイル。gcloud の ADC ファイルより優先されます。 |
 
 ## Agent Platform でのコマンド対応状況
 
@@ -170,7 +199,14 @@ API キーは Agent Platform には送信されません。
 
 ## upstream への追従
 
-本 fork は `scripts/plus/sync-upstream.sh` を使って upstream のリリースをマージしています。fork のバージョン番号は upstream とは独立しています。`gmn --version` でベースとなった upstream のバージョンも確認できます。
+本 fork は upstream のリリースだけを取り込み、upstream の `main` にある未リリースの変更は取り込みません。fork のバージョン番号は upstream とは独立しています。`gmn --version` で、ベースにした upstream のリリースも確認できます。
+
+## 問い合わせ
+
+- 不具合と要望: この fork の [Issues](https://github.com/yasuguin/gmn-cli/issues)。fork の問題を upstream に報告しないでください。
+- 変更履歴: [CHANGELOG](../CHANGELOG.md)
+- セキュリティ: [SECURITY.md](SECURITY.md)
+- 開発への参加: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## ライセンス
 

@@ -19,13 +19,12 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## What is different
 
 - Gemini API (default): the same behavior as upstream.
-- Agent Platform (formerly Vertex AI): the same commands can call Agent Platform with Application Default Credentials (ADC). Use this when you need IAM, audit logs, or VPC Service Controls and cannot hand out API keys.
+- Agent Platform (formerly Vertex AI): the same commands can call Agent Platform with Application Default Credentials (ADC). Use this when you need IAM, audit logs, or VPC Service Controls and cannot hand out API keys. Upstream has an [open feature request](https://github.com/google-gemini/gemini-api-cli/issues/241) for this.
 - Separate config location and command name, so both CLIs can be installed together.
-- Upstream feature request for this: [google-gemini/gemini-api-cli#241](https://github.com/google-gemini/gemini-api-cli/issues/241).
 
 ## Install
 
-Pick one. Every option installs the same `gmn` binary.
+Pick one. Every option gives you the same `gmn` binary.
 
 ### Homebrew (macOS)
 
@@ -47,24 +46,36 @@ From npm. Use this when your network blocks GitHub or your CI hits the GitHub AP
 mise use -g npm:@yasuguin/gmn-cli
 ```
 
-### npm (run without installing)
+### npm
+
+Run without installing:
 
 ```bash
 npx @yasuguin/gmn-cli --help
 ```
 
-With pnpm:
-
 ```bash
 pnpm dlx @yasuguin/gmn-cli --help
 ```
 
-### PyPI (uvx)
+Install globally:
 
-Provides both the `gmn` and `gmn-cli` commands.
+```bash
+pnpm add -g @yasuguin/gmn-cli
+```
+
+### PyPI
+
+Run without installing:
 
 ```bash
 uvx gmn-cli --help
+```
+
+Install as a tool. This provides both the `gmn` and `gmn-cli` commands.
+
+```bash
+uv tool install gmn-cli
 ```
 
 ### Install script (macOS and Linux)
@@ -107,6 +118,14 @@ gmn generate "Write a haiku about APIs"
 
 Check `whoami` before a paid call. It shows the backend, project, and location, and where each came from.
 
+## Use from agents
+
+This repo ships an agent skill ([skills/gmn-cli](../skills/gmn-cli/SKILL.md)) that tells coding agents how to call `gmn`. Install it with the [skills](https://github.com/vercel-labs/skills) CLI:
+
+```bash
+npx skills add yasuguin/gmn-cli
+```
+
 ## Agent Platform settings
 
 Each setting is read in this order, and the first one set wins:
@@ -130,6 +149,16 @@ Authentication with `--backend vertex`:
 The token is refreshed per request, so long runs (video polling, long agent runs) do not fail when it expires. The quota project is set to `--project` unless you set `--user-project`.
 
 The API key is not sent to Agent Platform.
+
+Environment variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | none | API key for the Gemini API. Not sent to Agent Platform. |
+| `GOOGLE_GENAI_USE_VERTEXAI` | `false` | `true` or `1` selects Agent Platform. |
+| `GOOGLE_CLOUD_PROJECT` | none | Google Cloud project for Agent Platform. |
+| `GOOGLE_CLOUD_LOCATION` | `global` | Agent Platform location. |
+| `GOOGLE_APPLICATION_CREDENTIALS` | none | Credentials file for ADC. Takes priority over the gcloud ADC file. |
 
 ## Commands on Agent Platform
 
@@ -170,7 +199,14 @@ Verified with the maintainer's smoke script on 2026-11-26 against the `global` l
 
 ## Following upstream
 
-The fork merges upstream releases with `scripts/plus/sync-upstream.sh`. The fork's version number is independent of upstream. `gmn --version` also shows the upstream base version.
+The fork takes in upstream releases only, not unreleased changes on upstream `main`. Its version number is independent of upstream. `gmn --version` also shows the upstream release it is based on.
+
+## Help
+
+- Bugs and requests: [Issues](https://github.com/yasuguin/gmn-cli/issues) of this fork. Please do not report fork problems upstream.
+- Changes: [CHANGELOG](../CHANGELOG.md)
+- Security: [SECURITY.md](SECURITY.md)
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 
