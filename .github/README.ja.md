@@ -27,10 +27,13 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 
 ```bash
 brew install --cask yasuguin/tap/gmn-cli   # macOS only
+mise use -g github:yasuguin/gmn-cli       # from GitHub Releases
 npx @yasuguin/gmn-cli --help    # or: pnpm dlx @yasuguin/gmn-cli --help
 uvx gmn-cli --help          # installs gmn and gmn-cli
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
+
+[mise](https://mise.jdx.dev/) なら、`github:yasuguin/gmn-cli` で GitHub Releases のバイナリが入ります。`npm:@yasuguin/gmn-cli` や `pipx:gmn-cli` でも入ります。
 
 インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GMN_INSTALL_DIR` を、バージョンを固定するには `GMN_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
 
