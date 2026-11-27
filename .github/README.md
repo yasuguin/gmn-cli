@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/yasuguin/gmn-cli?style=flat-square)](../LICENSE)
 [![Homebrew](https://img.shields.io/badge/Homebrew-yasuguin%2Ftap-fbb040?style=flat-square&logo=homebrew)](https://github.com/yasuguin/homebrew-tap)
 
-[日本語](README.ja.md)
+**English** | [日本語](README.ja.md)
 
 `gmn` is a one-shot command-line client that works with Gemini models through the Gemini API or Agent Platform (formerly Vertex AI). It is built for agents, scripts, and CI: it sends one request and returns the result. It does not edit files or run tools on its own, and it is not the interactive Gemini CLI agent.
 
@@ -145,6 +145,13 @@ Authentication with `--backend vertex`:
 
 1. `--access-token`, if given
 2. ADC: `GOOGLE_APPLICATION_CREDENTIALS`, the gcloud ADC file, or the metadata server (Cloud Run, GCE, Workload Identity)
+
+To run as a service account:
+
+- Key file: `export GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa-key.json`
+- Impersonation without a key: `gcloud auth application-default login --impersonate-service-account=SA_EMAIL`
+
+The account needs `roles/aiplatform.user` on the project.
 
 The token is refreshed per request, so long runs (video polling, long agent runs) do not fail when it expires. The quota project is set to `--project` unless you set `--user-project`.
 
