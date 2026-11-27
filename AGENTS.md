@@ -21,3 +21,4 @@ ruleset「main は PR だけで変える」（bypass は誰にも無い）と re
 - **リリース PR**（`release-please--…`）: マージすると npm・PyPI・Homebrew へ出て戻せない。変更履歴に「Features」「Fixes」「Upstream sync」が載ったときだけ、ユーザーに確かめてからマージする。タグは手で打たない。
 - **public に出る文字**: commit・issue・PR・コードに、API key・認証情報・社内の名前や情報を書かない。push protection は既知の形式の key しか止めない。
 - **本家への出力**: 本家（google-gemini/gemini-api-cli）に issue・PR を出さない。fork の不具合は fork の Issues に書く。
+  - fork の issue・PR・commit から本家の issue・PR をリンクで指さない。`google-gemini/gemini-api-cli#241` や本家の URL のほか、fork に無い番号の `#241` も本家を指し、本家のその issue に「mentioned this」として fork へのリンクが載る。一度載ると、fork 側の本文を直しても消えない。本家の issue は「本家の issue 241」のように `#` を付けずに書く。
