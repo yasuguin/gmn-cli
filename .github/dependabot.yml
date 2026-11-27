@@ -12,6 +12,8 @@ updates:
       commit-message:
           prefix: fix
           include: scope
+      # ラベルの workflow は Dependabot の PR で動けないので、変更履歴の分類（.github/release.yml）のラベルをここで付ける。
+      labels: ["changelog: fix"]
     - package-ecosystem: github-actions
       directory: /
       schedule:
@@ -21,3 +23,4 @@ updates:
       commit-message:
           prefix: ci
           include: scope
+      labels: ["changelog: skip"]
