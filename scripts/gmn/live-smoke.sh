@@ -22,6 +22,7 @@ Agent Platform へ実際に送る smoke スクリプト（保守者が手元で�
   GOOGLE_CLOUD_PROJECT   必須。課金先の project（出力とログには伏せて <project> と出す）
   GOOGLE_CLOUD_LOCATION  任意。既定は global
   SMOKE_GCS_URI          任意。gs:// の URI（例 gs://BUCKET/sample.mp4）。あれば analyze と（音声なら）transcribe を送る
+  SMOKE_VIDEO=1          任意。video を 1 本（360p）送る。費用がかかるので既定では回さない
   SMOKE_DRY_RUN=1        任意。通信しない。各コマンドに --dry-run を付けて流れだけ確かめる（ADC も読まない）
   SMOKE_PROBE_API_VERSION 任意。--probe-models の generateContent の API バージョン（既定 v1）
 
@@ -273,8 +274,10 @@ run_check models-get 0 'gemini-4-hydrogen' models get gemini-4-hydrogen
 run_check agent-list 0 '' agent list
 if [ -n "$gen_id" ]; then
   run_check agent-status 0 '' agent status "$gen_id"
+  run_check agent-delete-interaction 0 '' agent delete-interaction "$gen_id"
 else
   skip_check agent-status "generate の応答から interaction id が取れなかった"
+  skip_check agent-delete-interaction "generate の応答から interaction id が取れなかった"
 fi
 
 run_check environments-unsupported 2 'not available|unknown command' environments list
@@ -306,6 +309,23 @@ run_check image 0 '' image "a small red apple on white background" --out "$out_d
 file_check image-file "$out_dir/image.png"
 run_check tts 0 '' tts "Hello from Agent Platform" --out "$out_dir/tts.wav"
 wav_check tts-file "$out_dir/tts.wav"
+
+# music は response_format を付けずに送り、既定の lyria-3.5 を lyria-3-pro-preview に替える。
+# 素朴なプロンプトは recitation（既存の曲に似すぎる）で断られることがあるので、具体的に書く。
+run_check music 0 'Using lyria-3-pro-preview' music "a short original lo-fi beat with soft vinyl crackle, mellow electric piano in D minor, 80 bpm" --out "$out_dir/music.mp3"
+file_check music-file "$out_dir/music.mp3"
+run_check music-unsupported-model 2 'lyria-3-pro-preview' music "calm piano" -m lyria-3.5 --out "$out_dir/music-unsupported.mp3"
+
+if [ "${SMOKE_VIDEO:-}" = 1 ]; then
+  run_check video 0 '' video "a red ball bouncing once on a white floor" --resolution 360p --out "$out_dir/video.mp4"
+  file_check video-file "$out_dir/video.mp4"
+else
+  skip_check video "SMOKE_VIDEO=1 が無い（費用がかかるので既定では回さない）"
+fi
+
+# Interactions API のマルチリージョン（送り先は aiplatform.<location>.rep.googleapis.com）。
+run_check generate-us 0 '' generate "Say hi in 3 words" --location us --stream=false
+run_check generate-eu 0 '' generate "Say hi in 3 words" --location eu --stream=false
 
 probe_text_models=(gemini-2.5-flash gemini-2.5-pro gemini-3.5-flash gemini-3.7-flash gemini-4-argon gemini-4-carbon gemini-4-neon gemini-flash-latest gemini-pro-latest gemma-4-31b-it)
 probe_image_models=(gemini-nano-banana-2.1 gemini-3.1-flash-image gemini-3-pro-image gemini-2.5-flash-image nano-banana-pro-preview)

@@ -19,7 +19,7 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## 違い
 
 - Gemini API（デフォルト）: upstream と同じ動作です。
-- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。upstream にも同じ[機能要望](https://github.com/google-gemini/gemini-api-cli/issues/241)が出ています。
+- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。`aiplatform.googleapis.com` のデータアクセス監査ログはデフォルトで無効なので、呼び出しを記録するにはプロジェクトで有効にしてください。upstream にも同じ[機能要望](https://github.com/google-gemini/gemini-api-cli/issues/241)が出ています。
 - 設定ファイルの場所とコマンド名が分かれているため、両方の CLI を同時にインストールできます。
 
 ## インストール
@@ -172,24 +172,27 @@ API キーは Agent Platform には送信されません。
 
 ## Agent Platform でのコマンド対応状況
 
-2026-11-26 にメンテナのスモークスクリプトで `global` ロケーションに対して検証した結果です。
+特に断りがなければ、2026-11-26 と 2026-11-27 に `global` ロケーションへ実際に送って確かめた結果です。
 
 - 動作するもの:
   - `generate`, `analyze`, `agent run`, `agent status`, `agent list`
   - `transcribe`（デフォルトモデルは置き換えられます。後述）
   - `generateContent` 経由の `image`（対応 4 モデル: `gemini-nano-banana-2.1`, `gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-2.5-flash-image`）。アスペクト比、サイズ、出力 MIME タイプ、画像編集が動作します。
   - `generateContent` 経由の `tts`（対応 4 モデル: `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-3.1-flash-tts-preview`, `gemini-2.5-flash-preview-tts`）。`--voice`、`--style`、`--multi-speaker`（最大 2 話者）が動作します。
+  - `music`（`lyria-3-pro-preview` と `lyria-3-clip-preview`）。デフォルトの `lyria-3.5` は Agent Platform で提供されていないため、`lyria-3-pro-preview` に置き換えられます。MP3 ファイルを書き出します。
+  - `video`（デフォルトの `gemini-omni-1.2-flash`）
+  - `agent cancel`, `agent delete-interaction`, `agent get`, `agent delete`。`agent create` は API に届きますが、ベースエージェント `antigravity-preview-09-2026` は Agent Platform に拒否されます。
   - `models list`, `models get`
-  - `analyze` と `transcribe` のローカルファイルは、サイズが小さければインラインで送信されます。大きいメディアは `gs://` URI 経由で扱います。
+  - `analyze` と `transcribe` のローカルファイルは、サイズが小さければインラインで送信されます。大きいメディアは `gs://` URI 経由で扱い、`analyze` と `transcribe` で動作します。
 - 送信前に停止するもの（終了コード 2）:
   - `files` および `files upload`: `--input` に `gs://` URI を指定してください
   - `environments`, `triggers`, `webhooks`, `voices`, `credentials`
   - `tts --voice-prompt`（カスタム音声）
-- 未検証:
-  - `music`, `video`
-  - 実際の呼び出しでの `gs://` 入力（スモークテストではスキップ）
-  - `run`, `status`, `list` 以外の `agent` サブコマンド
-  - `global` 以外のロケーション
+
+ロケーション:
+
+- Interactions API を使うコマンド（上のうち `image`、`tts`、`models` 以外）は、`global`、`us`、`eu` を受け付けます（`generate` で確認）。`us-central1` のような単一リージョンは Agent Platform に拒否されます。
+- `image` と `tts` は指定したロケーションに送りますが、モデルごとに提供されるロケーションが限られます。たとえば `us` では、`tts` は動作し、`image` のデフォルトモデルは見つかりません。
 
 ## モデル名
 
