@@ -32,7 +32,7 @@ type stubRequest struct {
 func newModelsStub(t *testing.T, respond func(w http.ResponseWriter, r *http.Request)) *modelsStub {
 	t.Helper()
 	s := &modelsStub{}
-	s.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.server = httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		s.requests = append(s.requests, stubRequest{
 			Path:      r.URL.Path,
@@ -45,7 +45,7 @@ func newModelsStub(t *testing.T, respond func(w http.ResponseWriter, r *http.Req
 		s.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		respond(w, r)
-	}))
+	})))
 	t.Cleanup(s.server.Close)
 	return s
 }

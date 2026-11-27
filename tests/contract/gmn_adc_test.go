@@ -30,14 +30,14 @@ type tokenStub struct {
 func newTokenStub(t *testing.T) *tokenStub {
 	t.Helper()
 	s := &tokenStub{}
-	s.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.server = httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		s.calls++
 		n := s.calls
 		s.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, `{"access_token":"tok-%d","token_type":"Bearer","expires_in":3600}`, n)
-	}))
+	})))
 	t.Cleanup(s.server.Close)
 	return s
 }
@@ -80,13 +80,13 @@ func apiStub(t *testing.T) (*httptest.Server, func() []http.Header) {
 	t.Helper()
 	var mu sync.Mutex
 	var got []http.Header
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		got = append(got, r.Header.Clone())
 		mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"id":"i","status":"completed"}`)
-	}))
+	})))
 	t.Cleanup(server.Close)
 	return server, func() []http.Header {
 		mu.Lock()

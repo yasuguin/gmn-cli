@@ -33,7 +33,7 @@ type musicStub struct {
 func newMusicStub(t *testing.T, response string) *musicStub {
 	t.Helper()
 	stub := &musicStub{}
-	stub.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	stub.Server = httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		stub.mu.Lock()
 		stub.path, stub.rawBody = r.URL.Path, raw
@@ -41,7 +41,7 @@ func newMusicStub(t *testing.T, response string) *musicStub {
 		stub.requests.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, response)
-	}))
+	})))
 	t.Cleanup(stub.Close)
 	return stub
 }

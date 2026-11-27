@@ -35,7 +35,7 @@ type generateContentStub struct {
 func newGenerateContentStub(t *testing.T, response string) *generateContentStub {
 	t.Helper()
 	s := &generateContentStub{}
-	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.Server = httptest.NewServer(onlyFromCLI(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		s.mu.Lock()
 		s.path, s.header, s.rawBody = r.URL.Path, r.Header.Clone(), raw
@@ -43,7 +43,7 @@ func newGenerateContentStub(t *testing.T, response string) *generateContentStub 
 		s.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, response)
-	}))
+	})))
 	t.Cleanup(s.Close)
 	return s
 }

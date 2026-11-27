@@ -266,3 +266,46 @@ func TestGmnはモデルの返答の中の文字列を書き換えない(t *test
 		t.Errorf("返答が書き換えられている:\n%s", result.stdout)
 	}
 }
+
+// onlyFromCLI は、CLI（gmn・gemini-api）と Go の HTTP クライアント（ADC のトークン取得など）から来たリクエストだけを h に渡し、
+// ほかは 404 で返して数えない。手元では localhost の待ち受けを見つけて叩くツール（開発サーバーの探索など）の
+// リクエストがスタブに届くことがあり、それを数えると件数や中身の確かめが回ごとに揺れるため。
+func onlyFromCLI(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !fromCLI(r) {
+			http.NotFound(w, r)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
+func fromCLI(r *http.Request) bool {
+	ua := r.UserAgent()
+	for _, prefix := range []string{"gmn/", "gemini-api/", "google-genai-cli/", "Go-http-client/"} {
+		if strings.HasPrefix(ua, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func TestGmnスタブはCLI以外のプロセスからのリクエストを数えない(t *testing.T) {
+	stub := newInteractionStub(t, gcsOKResponse)
+	req, err := http.NewRequest(http.MethodGet, stub.URL+"/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("User-Agent", "undici") // Node.js の fetch。手元の開発サーバーの探索がこの形で叩いてくる
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", res.StatusCode)
+	}
+	if n := stub.requests.Load(); n != 0 {
+		t.Errorf("CLI 以外からのリクエストを %d 回数えた", n)
+	}
+}
