@@ -528,7 +528,8 @@ func buildSpeechConfig(cmd *cobra.Command) (*interactions.SpeechConfigUnion, str
 		name, voice, ok := strings.Cut(pair, "=")
 		// Names stay case-sensitive: each must match its label in the script.
 		name, voice = strings.Join(strings.Fields(name), " "), strings.TrimSpace(voice)
-		if !ok || name == "" || voice == "" {
+		// 区切りの = が 2 つ以上ある入力（A=Kore=oops）は、声の名前に = を混ぜて API へ送らないよう使い方の誤りにする。
+		if !ok || name == "" || voice == "" || strings.Contains(voice, "=") {
 			return nil, "", usageError(fmt.Sprintf("invalid --multi-speaker entry %q: expected Speaker=Voice", pair))
 		}
 		if seen[name] {
