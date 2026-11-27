@@ -1,0 +1,23 @@
+# 脆弱性の修正（security updates）だけを受ける。版上げの PR（version updates）は出さない。
+# 依存の版は本家のリリースの取り込みで動くので（docs/adr/0002）、fork で独自に上げるのは脆弱性の修正だけにして、取り込みの衝突を小さく保つ。
+# open-pull-requests-limit: 0 は version updates だけを止め、security updates は止めない。
+version: 2
+updates:
+    - package-ecosystem: gomod
+      directory: /
+      schedule:
+          interval: weekly
+      open-pull-requests-limit: 0
+      # 題が fix(deps): … になり、release-please が patch を上げて修正を公開物へ届ける。
+      commit-message:
+          prefix: fix
+          include: scope
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+      open-pull-requests-limit: 0
+      # workflow の修正は公開物に入らないので、版を上げない ci にする。
+      commit-message:
+          prefix: ci
+          include: scope
