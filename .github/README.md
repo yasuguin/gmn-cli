@@ -28,7 +28,10 @@ Pick one. Every option gives you the same `gmn` binary.
 
 ### Homebrew (macOS)
 
+Homebrew requires taps outside its official ones to be trusted before it loads their casks, so trust the tap once first.
+
 ```bash
+brew trust yasuguin/tap
 brew install --cask yasuguin/tap/gmn-cli
 ```
 
