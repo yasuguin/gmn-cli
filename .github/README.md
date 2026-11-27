@@ -28,12 +28,13 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ```bash
 brew install --cask yasuguin/tap/gmn-cli   # macOS only
 mise use -g github:yasuguin/gmn-cli       # from GitHub Releases
+mise use -g npm:@yasuguin/gmn-cli         # from npm
 npx @yasuguin/gmn-cli --help    # or: pnpm dlx @yasuguin/gmn-cli --help
 uvx gmn-cli --help          # installs gmn and gmn-cli
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
 
-With [mise](https://mise.jdx.dev/), `github:yasuguin/gmn-cli` installs the binary from GitHub Releases. `npm:@yasuguin/gmn-cli` and `pipx:gmn-cli` also work.
+With [mise](https://mise.jdx.dev/), use `github:yasuguin/gmn-cli` or `npm:@yasuguin/gmn-cli`. Both install the same binary. `github:` downloads it from GitHub Releases and needs no Node.js. `npm:` fits networks that block GitHub or CI that hits the GitHub API rate limit.
 
 The install script downloads the binary from [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) (tags `gmn-v*`) and checks it against `checksums.txt`. If the check fails, nothing is installed. It installs to `/usr/local/bin` if writable, otherwise `~/.local/bin`. Set `GMN_INSTALL_DIR` to choose the directory, and `GMN_VERSION` to pin a version (for example `0.1.0`). Windows is not supported by the script; download the zip from Releases.
 
