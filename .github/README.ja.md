@@ -19,24 +19,82 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 ## 違い
 
 - Gemini API（デフォルト）: upstream と同じ動作です。
-- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。
+- Agent Platform（旧 Vertex AI）: Application Default Credentials (ADC) を使って、同じコマンドから Agent Platform を呼び出せます。IAM、監査ログ、VPC Service Controls が必要で、API キーを配布できない場合に使用してください。upstream にも同じ[機能要望](https://github.com/google-gemini/gemini-api-cli/issues/241)が出ています。
 - 設定ファイルの場所とコマンド名が分かれているため、両方の CLI を同時にインストールできます。
-- upstream での機能要望: [google-gemini/gemini-api-cli#241](https://github.com/google-gemini/gemini-api-cli/issues/241)
 
 ## インストール
 
+どれか 1 つを選んでください。どの方法でも同じ `gmn` のバイナリを使います。
+
+### Homebrew（macOS）
+
 ```bash
-brew install --cask yasuguin/tap/gmn-cli   # macOS only
-mise use -g github:yasuguin/gmn-cli       # from GitHub Releases
-mise use -g npm:@yasuguin/gmn-cli         # from npm
-npx @yasuguin/gmn-cli --help    # or: pnpm dlx @yasuguin/gmn-cli --help
-uvx gmn-cli --help          # installs gmn and gmn-cli
+brew install --cask yasuguin/tap/gmn-cli
+```
+
+### mise
+
+GitHub Releases から入れます。Node.js は要りません。
+
+```bash
+mise use -g github:yasuguin/gmn-cli
+```
+
+npm から入れます。GitHub への通信が止められたネットワークや、GitHub API の回数の上限に当たる CI で使えます。
+
+```bash
+mise use -g npm:@yasuguin/gmn-cli
+```
+
+### npm
+
+入れずに実行する:
+
+```bash
+npx @yasuguin/gmn-cli --help
+```
+
+```bash
+pnpm dlx @yasuguin/gmn-cli --help
+```
+
+グローバルに入れる:
+
+```bash
+pnpm add -g @yasuguin/gmn-cli
+```
+
+### PyPI
+
+入れずに実行する:
+
+```bash
+uvx gmn-cli --help
+```
+
+ツールとして入れる。`gmn` と `gmn-cli` の 2 つのコマンドが使えます。
+
+```bash
+uv tool install gmn-cli
+```
+
+### インストールスクリプト（macOS・Linux）
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | bash
 ```
 
-[mise](https://mise.jdx.dev/) なら、`github:yasuguin/gmn-cli` と `npm:@yasuguin/gmn-cli` のどちらでも入ります。入るバイナリは同じです。`github:` は GitHub Releases から落とすので Node.js が要りません。`npm:` は、GitHub への通信が止められたネットワークや、GitHub API の回数の上限に当たる CI で使えます。
+[GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。照合に失敗したら何も入れません。書き込めれば `/usr/local/bin` に、書き込めなければ `~/.local/bin` に入れます。
 
-インストールスクリプトは [GitHub Releases](https://github.com/yasuguin/gmn-cli/releases)（タグ `gmn-v*`）からバイナリをダウンロードし、`checksums.txt` と照合します。検証に失敗した場合は何もインストールされません。書き込み権限があれば `/usr/local/bin` に、なければ `~/.local/bin` にインストールされます。インストール先を変更するには `GMN_INSTALL_DIR` を、バージョンを固定するには `GMN_VERSION`（例: `0.1.0`）を設定してください。Windows はスクリプト非対応のため、Releases から zip をダウンロードしてください。
+入れる場所や版を決めるときは、`GMN_INSTALL_DIR` と `GMN_VERSION` を渡します。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yasuguin/gmn-cli/main/scripts/plus/install.sh | GMN_INSTALL_DIR="$HOME/bin" GMN_VERSION=0.1.0 bash
+```
+
+### Windows
+
+インストールスクリプトは Windows に対応していません。[GitHub Releases](https://github.com/yasuguin/gmn-cli/releases) から zip をダウンロードしてください。
 
 ## クイックスタート
 
@@ -59,6 +117,14 @@ gmn generate "Write a haiku about APIs"
 ```
 
 課金が発生する呼び出しの前に `whoami` で確認してください。バックエンド、プロジェクト、ロケーションと、それぞれの参照元が表示されます。
+
+## エージェントから使う
+
+コーディングエージェントに `gmn` の呼び方を教える agent skill（[skills/gmn-cli](../skills/gmn-cli/SKILL.md)）を同梱しています。[skills](https://github.com/vercel-labs/skills) CLI で入れられます。
+
+```bash
+npx skills add yasuguin/gmn-cli
+```
 
 ## Agent Platform の設定
 
@@ -83,6 +149,16 @@ location: global
 トークンはリクエストごとに更新されるため、長時間の実行（動画のポーリングやエージェントの長時間実行など）でも期限切れで失敗しません。クォータプロジェクトには、`--user-project` を指定しない限り `--project` の値が使われます。
 
 API キーは Agent Platform には送信されません。
+
+環境変数:
+
+| 変数 | 既定値 | 説明 |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | なし | Gemini API の API キー。Agent Platform には送信されません。 |
+| `GOOGLE_GENAI_USE_VERTEXAI` | `false` | `true` か `1` で Agent Platform を使います。 |
+| `GOOGLE_CLOUD_PROJECT` | なし | Agent Platform で使う Google Cloud のプロジェクト。 |
+| `GOOGLE_CLOUD_LOCATION` | `global` | Agent Platform のロケーション。 |
+| `GOOGLE_APPLICATION_CREDENTIALS` | なし | ADC の認証情報ファイル。gcloud の ADC ファイルより優先されます。 |
 
 ## Agent Platform でのコマンド対応状況
 
@@ -123,7 +199,14 @@ API キーは Agent Platform には送信されません。
 
 ## upstream への追従
 
-本 fork は `scripts/plus/sync-upstream.sh` を使って upstream のリリースをマージしています。fork のバージョン番号は upstream とは独立しています。`gmn --version` でベースとなった upstream のバージョンも確認できます。
+本 fork は upstream のリリースだけを取り込み、upstream の `main` にある未リリースの変更は取り込みません。fork のバージョン番号は upstream とは独立しています。`gmn --version` で、ベースにした upstream のリリースも確認できます。
+
+## 問い合わせ
+
+- 不具合と要望: この fork の [Issues](https://github.com/yasuguin/gmn-cli/issues)。fork の問題を upstream に報告しないでください。
+- 変更履歴: [CHANGELOG](../CHANGELOG.md)
+- セキュリティ: [SECURITY.md](SECURITY.md)
+- 開発への参加: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## ライセンス
 
