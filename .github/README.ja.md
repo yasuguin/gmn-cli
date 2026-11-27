@@ -28,7 +28,10 @@ gmn transcribe -i meeting.mp3 --format srt --out meeting.srt
 
 ### Homebrew（macOS）
 
+Homebrew は、公式以外の tap の cask を読み込む前に、その tap を信頼するよう求めます。初回だけ tap を信頼してから入れます。
+
 ```bash
+brew trust yasuguin/tap
 brew install --cask yasuguin/tap/gmn-cli
 ```
 
