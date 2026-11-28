@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 (2026-11-28)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+
+
+**Full Changelog**: https://github.com/yasuguin/gmn-cli/compare/gmn-v0.2.0...gmn-v0.2.1
+
 ## 0.2.0 (2026-11-27)
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
